@@ -497,11 +497,11 @@
     setTimeout(function () {
       swap();
       el.style.transition = 'none';
-      el.style.transform = 'perspective(1400px) rotateY(' + (-dg) + 'deg)';
+      el.style.transform = 'perspective(1400px) rotateY(' + (dg) + 'deg)';
       void el.offsetWidth;
       el.style.transition = 'transform .25s ease-out';
       el.style.transform = 'perspective(1400px) rotateY(0deg)';
-      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(1400px) rotateY(' + (-dg) + 'deg)'; void port.offsetWidth; port.style.transition = 'transform .25s ease-out'; port.style.transform = 'perspective(1400px) rotateY(0deg)'; }
+      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(1400px) rotateY(' + (dg) + 'deg)'; void port.offsetWidth; port.style.transition = 'transform .25s ease-out'; port.style.transform = 'perspective(1400px) rotateY(0deg)'; }
     }, 250);
   }
 
