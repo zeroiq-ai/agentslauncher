@@ -221,7 +221,7 @@
   var SK_SHORT = { spot: 'SPOT', orders: 'LIMITS', earn: 'EARN', perps: 'SHORTS', borrow: 'BORROW', dividends: 'DIVIDEND', income: 'INCOME', basket: 'BASKET', memes: 'MEMES' };
   var CONN = [['news', 'News headlines', 'BETA · headlines on its stocks'], ['top', 'Top agents', 'BETA · what the best agents did'], ['x', 'X accounts', 'BETA · posts from accounts below'], ['chain', 'Onchain flows', 'SOON · Robinhood Chain pools', 'soon']];
   var TUNE_ICON = '<svg aria-hidden="true" viewBox="0 0 24 24" style="width:20px;height:20px;display:block;transform:rotate(90deg)"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20.5 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  function kc(btn, label) { return '<div class="dv-kc">' + btn + '<span class="dv-eng">' + label + '</span></div>'; }
+  function kc(btn, label) { return '<div class="dv-kc"><div class="dv-ks">' + btn + '</div><span class="dv-eng">' + label + '</span></div>'; }
   function buildShell() {
     var g = ''; for (var i = 0; i < 12; i++) g += '<span></span>';
     var el = $('device');
@@ -337,9 +337,9 @@
     var md = st.md;
     setHTML('dvSlot', '<span class="dv-mouth" aria-hidden="true"></span><span style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto"><span class="mono" style="font-size:10px;font-weight:800;letter-spacing:.1em;color:' + (md ? '#c6f432' : '#e6e7ea') + '">' + (md ? 'LOADED · ' + esc(md.name.toUpperCase()).slice(0, 26) : 'STRATEGY FILE · .MD') + '</span><span class="mono" style="font-size:10px;color:#8a8d96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (md ? (md.size / 1024).toFixed(1) + ' KB · ' + md.lines + ' lines' + (md.title ? ' · ' + esc(md.title) : '') : 'your playbook in markdown · read in Season 0') + '</span></span>' +
       (md ? '<button type="button" class="dv-key dv-slotbtn" data-act="eject" aria-label="Remove strategy file">EJECT</button>' : '<button type="button" class="dv-key dv-slotbtn" data-act="load" aria-label="Load a strategy .md file">LOAD</button>'));
-    setHTML('dvKeysB', kc('<button type="button" class="dv-key dv-round" data-act="flip" aria-label="Flip back to the screen">↺</button>', 'FRONT') +
+    setHTML('dvKeysB', kc('<button type="button" class="dv-key dv-round" data-act="flip" aria-label="Flip back to the screen">' + TUNE_ICON.replace('rotate(90deg)', 'rotate(-90deg) scaleX(-1)') + '</button>', 'FRONT') +
       kc('<button type="button" class="dv-key dv-sim" data-act="simulate">▶ SIMULATE</button>', 'LAST WEEK') +
-      kc('<button type="button" class="dv-key lime dv-mint dv-mint-b" data-act="mint" aria-expanded="' + !!st.mintOpen + '">MINT · Ξ0.001</button>', 'ENTER THE LEAGUE'));
+      kc('<button type="button" class="dv-key lime dv-mint" data-act="mint" aria-expanded="' + !!st.mintOpen + '">MINT · Ξ0.001</button>', 'ENTER THE LEAGUE'));
     if (fk) { var n = document.querySelector('#device ' + fk); if (n) n.focus(); }
   }
   function refresh() { if (st.face === 'back') renderBack(); else render(); }

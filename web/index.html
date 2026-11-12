@@ -34,8 +34,8 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .dv-noise{position:absolute;inset:0;z-index:-1;width:100%;height:100%;pointer-events:none;mix-blend-mode:overlay;opacity:.55}
 .dv-hl{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(140% 70% at 20% 0%,rgba(255,255,255,.10),transparent 55%),radial-gradient(120% 60% at 100% 100%,rgba(0,0,0,.25),transparent 60%)}
 .dv-top,.dv-foot{display:flex;justify-content:space-between;align-items:center}
-.dv-foot{margin-top:auto}
-.dv-face{display:flex;flex-direction:column;gap:14px;min-height:0}
+.dv-foot{margin-top:2px}
+.dv-face{display:flex;flex-direction:column;gap:14px;min-height:0;flex:1 1 auto}
 .dv-emboss{font-family:Doto,monospace;font-weight:900;font-size:20px;letter-spacing:2px;color:#1b1c20;text-shadow:0 1px 0 rgba(255,255,255,.16),0 -1px 0 rgba(0,0,0,.5)}
 .dv-eng{font:800 9px 'JetBrains Mono',monospace;letter-spacing:.12em;color:#8a8d96;text-shadow:0 1px 0 rgba(0,0,0,.6);text-align:center}
 .dv-led{width:9px;height:9px;border-radius:50%;background:#c6f432;box-shadow:0 0 8px #c6f432,inset 0 -1px 1px rgba(0,0,0,.4);animation:dvblink 2.4s infinite}
@@ -44,8 +44,8 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .dv-grille span{width:4px;height:4px;border-radius:50%;background:#16171a;box-shadow:0 1px 0 rgba(255,255,255,.08)}
 .dv-screw{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 30%,#8a8d96,#3a3d44);box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
 .dv-screw::after{content:'';width:8px;height:2px;background:#1b1c20;transform:rotate(35deg)}
-.dv-bezel{background:#111215;border-radius:18px;padding:10px;box-shadow:inset 0 2px 4px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.08)}
-.dv-screen{position:relative;height:380px;box-sizing:border-box;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;color:#d9ff5c;background:repeating-linear-gradient(180deg,rgba(198,244,50,.035) 0 1px,transparent 1px 3px),radial-gradient(120% 90% at 50% 30%,#17220b 0%,#0d130a 70%);box-shadow:inset 0 0 24px rgba(0,0,0,.7)}
+.dv-bezel{flex:1 1 auto;display:flex;flex-direction:column;background:#111215;border-radius:18px;padding:10px;box-shadow:inset 0 2px 4px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.08)}
+.dv-screen{position:relative;flex:1 1 auto;min-height:380px;box-sizing:border-box;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;color:#d9ff5c;background:repeating-linear-gradient(180deg,rgba(198,244,50,.035) 0 1px,transparent 1px 3px),radial-gradient(120% 90% at 50% 30%,#17220b 0%,#0d130a 70%);box-shadow:inset 0 0 24px rgba(0,0,0,.7)}
 .scr-top{display:flex;justify-content:space-between;font-size:10px;font-weight:700;letter-spacing:.08em;color:#7d9a2a}
 .scr-main{display:flex;flex-direction:column;gap:10px;flex:1 1 auto;min-height:0}
 .scr-name{font-size:22px;line-height:1.05;color:#d9ff5c;overflow-wrap:anywhere}
@@ -71,7 +71,8 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .dv-lcd{background:#0d130a;box-shadow:inset 0 2px 3px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.08);border-radius:6px}
 .dv-ro{width:100%;box-sizing:border-box;text-align:center;padding:8px 6px;font-size:20px}
 .dv-kc{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
-.dv-keys{display:flex;justify-content:space-between;align-items:flex-end;padding:0 6px}
+.dv-keys{display:flex;justify-content:space-between;align-items:flex-start;padding:0 6px}
+.dv-ks{height:60px;display:flex;align-items:center;justify-content:center}
 .dv-key{border:0;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font:800 16px Inter,sans-serif;color:#e6e7ea;background:linear-gradient(180deg,#4a4d55 0%,#3a3d44 40%,#2c2e33 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -2px 0 rgba(0,0,0,.45),0 3px 0 #1a1b1f,0 6px 10px rgba(0,0,0,.3);transition:transform .06s,box-shadow .06s}
 .dv-key:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 0 #1a1b1f,0 2px 4px rgba(0,0,0,.3)}
 .dv-key.on{background:#15161a;color:#c6f432;box-shadow:inset 0 2px 4px rgba(0,0,0,.7)}
@@ -86,7 +87,7 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .dv-full{width:100%}
 .dv-mode{flex:1 1 0;padding:8px 0;min-height:34px;border-radius:8px;font:800 11px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#b9bcc4}
 .dv-rail{display:flex;gap:6px;padding:5px;border-radius:12px;background:#1c1d21;box-shadow:inset 0 2px 3px rgba(0,0,0,.6)}
-.dv-panel{position:relative;height:300px;box-sizing:border-box;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;overflow:auto;background:#24262b;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.4)}
+.dv-panel{position:relative;flex:1 1 auto;min-height:300px;box-sizing:border-box;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;overflow:auto;background:#24262b;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.4)}
 .dv-fader{display:flex;flex-direction:column;align-items:center;gap:6px}
 .dv-ftrack{position:relative;width:34px;height:128px;display:flex;justify-content:center}
 .dv-frail{position:absolute;top:0;bottom:0;width:6px;border-radius:3px;background:#0c0d0f;box-shadow:inset 0 1px 2px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.08)}
@@ -287,6 +288,6 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Hatch your AI trader</a></div>
 
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
