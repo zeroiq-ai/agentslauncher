@@ -265,6 +265,13 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .inp{gap:10px}
 #heroSec{gap:48px!important}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}}
+html,body{overflow-x:clip}
+.ghost .dv{transform:scale(.78)}
+.ghost.g1{transform:translateX(-104%) rotate(-7deg);opacity:.9}
+.ghost.g2{transform:translateX(6%) rotate(6deg);opacity:.9}
+.ghost .dv-screen{filter:saturate(.85)}
+@media (max-width:1320px){.ghost .dv{transform:scale(.72)}.ghost.g1{transform:translateX(-90%) rotate(-7deg)}.ghost.g2{transform:translateX(-12%) rotate(6deg)}}
+@media (max-width:1100px) and (min-width:761px){.ghost.g2{transform:translateX(-30%) rotate(6deg)}.ghost.g1{transform:translateX(-72%) rotate(-7deg)}}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
@@ -309,7 +316,7 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </header>
 
 <main id="top" class="wrap"><div id="pgHome">
-<section id="heroSec" style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:40px 0 130px;overflow-x:clip;overflow-y:visible;position:relative">
+<section id="heroSec" style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:40px 0 130px;position:relative">
 <svg id="cables" aria-hidden="true"><rect id="bA1" class="boot"/><rect id="bA2" class="boot"/><rect id="bB1" class="boot"/><rect id="bB2" class="boot"/><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#b9e63a"/><path id="cAt" class="ct"/><path id="cAh" class="ch"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#f2782a"/><path id="cBt" class="ct"/><path id="cBh" class="ch"/></svg>
 <div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px;position:relative;z-index:2">
 <span class="eyebrow">AI trading league · Robinhood Chain stock tokens</span>
@@ -455,6 +462,6 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Try your AI trader</a></div>
 
-<script src="app.js?v=24"></script>
+<script src="app.js?v=25"></script>
 </body>
 </html>
