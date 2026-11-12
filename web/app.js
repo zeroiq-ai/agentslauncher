@@ -184,7 +184,7 @@
     var mood = moodV > 62 ? 'happy' : (moodV < 42 ? 'sad' : 'ok');
     var trades = sim.trades, lastT = trades[trades.length - 1];
     var diary = born
-      ? (done ? (sim.ret >= 0 ? 'Up ' + fmt(sim.ret) + ' on the week. ' + (lastT && lastT.act === 'SELL' ? 'I may have sold a little early. Feed me a question?' : 'Still holding. Feed me a question?') : 'Down ' + fmt(sim.ret) + ' on the week. I have notes for myself. And I am hungry.') : 'Trading last week…')
+      ? (done ? (sim.ret >= 0 ? 'Up ' + fmt(sim.ret) + ' on the week. ' + (lastT && lastT.act === 'SELL' ? 'I may have sold a little early.' : 'Still holding.') : 'Down ' + fmt(sim.ret) + ' on the week. I have notes for myself.') : 'Trading last week…')
       : (lastT ? (lastT.act === 'BUY' ? 'Bought NVDA on a red day.' : 'Took profit. Resting.') : 'Watching NVDA. Nothing to do yet.');
     var sells = trades.filter(function (t) { return t.act === 'SELL'; }).length;
     var prop = dna.style === 'dip'
@@ -299,7 +299,7 @@
       var wr = winRate(m.trades), risk = Math.min(100, Math.round(m.sim.dd * 100 / st.tune.limit * 100));
       var sk = skillNames().length ? SKILLS.filter(function (k) { return st.skills[k[0]]; }).map(function (k) { return SK_SHORT[k[0]]; }).join(' + ') : '';
       s += '<div style="display:flex;gap:14px;align-items:center"><img alt="' + esc(m.name) + ', your agent" class="' + (m.mood === 'happy' ? 'bob' : '') + '" style="width:120px;height:120px;flex:0 0 auto" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '">';
-      s += '<div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 auto"><span class="doto scr-name">' + esc(m.name) + '</span><span class="scr-sub">LV ' + m.lvl + ' · ' + (m.mood === 'happy' ? 'HAPPY' : (m.mood === 'sad' ? 'GRUMPY' : 'CALM')) + (m.born && !st.answered ? ' · HUNGRY' : '') + ' · ' + sk + '</span>';
+      s += '<div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 auto"><span class="doto scr-name">' + esc(m.name) + '</span><span class="scr-sub">LV ' + m.lvl + ' · ' + (m.mood === 'happy' ? 'HAPPY' : (m.mood === 'sad' ? 'GRUMPY' : 'CALM')) + '' + ' · ' + sk + '</span>';
       s += meter('WIN RATE', wr === null ? 0 : wr, wr === null ? '—' : wr + '%', 'Share of closed trades that made money this week');
       s += meter('RISK USED', risk, risk + '%', 'How much of the daily loss limit it has already used', true);
       s += meter('SYNC', m.fedV, m.fedV + '%', 'How well it knows your style. Answer its daily question to raise it');
