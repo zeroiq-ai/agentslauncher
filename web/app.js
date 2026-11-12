@@ -227,7 +227,7 @@
   function renderBack() { var m = model(); var el = $('device'); el.innerHTML = backHTML(m); el._h = null; }
   function flip(to) {
     var el = $('device');
-    var swap = function () { st.face = to; if (to === 'back') renderBack(); else { el._h = null; render(); } };
+    var swap = function () { st.face = to; if (to === 'back') renderBack(); else { el.innerHTML = ''; render(); } };
     if (reduce) { swap(); return; }
     el.style.transition = 'transform .16s ease-in';
     el.style.transform = 'perspective(1400px) rotateY(90deg)';
@@ -278,7 +278,7 @@
 
     // device
     var bt = st.btick || 0, d = '';
-    d += '<div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">' + (m.hatching ? 'Hatching' : (m.born ? 'Your agent' : 'Demo agent')) + '</span><span style="display:flex;gap:6px;align-items:center"><span class="chip">Paper</span><button type="button" class="btn sm" data-act="flip" aria-label="Flip the card to tune the agent" style="min-height:32px;padding:4px 10px;font-size:13px">↻ Tune</button></span></div>';
+    var dh = '<div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">' + (m.hatching ? 'Hatching' : (m.born ? 'Your agent' : 'Demo agent')) + '</span><span style="display:flex;gap:6px;align-items:center"><span class="chip">Paper</span><button type="button" class="btn sm" data-act="flip" aria-label="Flip the card to tune the agent" style="min-height:32px;padding:4px 10px;font-size:13px">↻ Tune</button></span></div>';
     d += '<div style="background:#0f0f0f;border-radius:14px;padding:20px;color:#f2f2f2;display:flex;flex-direction:column;gap:14px;min-height:330px">';
     if (m.hatching) {
       d += '<div style="display:flex;align-items:center;justify-content:center;gap:28px;flex:1 1 auto;flex-wrap:wrap"><img alt="" class="' + (bt < 14 ? 'shake' : 'pop') + '" style="width:160px;height:160px" src="' + robot(m.subject, { preset: m.preset, stage: bt < 14 ? 0 : 1, mood: 'happy' }) + '"><div class="mono" style="display:flex;flex-direction:column;gap:8px;font-size:13px">';
@@ -298,6 +298,7 @@
     d += '</div>';
     var kpi = function (l, v, col) { return '<div style="border:1px solid #e5e5e2;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px"><span class="mono" style="font-size:11px;color:#6b6b6b">' + l + '</span><span class="mono" style="font-weight:700;font-size:16px;color:' + (col || '#111') + '">' + v + '</span></div>'; };
     d += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' + kpi('7-DAY RETURN', fmt(m.sim.ret), m.sim.ret >= 0 ? UP : DOWN) + kpi('TRADES', m.trades.length) + kpi('MAX DRAWDOWN', (m.sim.dd * 100).toFixed(1) + '%') + '</div>';
+    var dm = d; d = '';
     if (!m.born && !m.hatching) d += '<button type="button" class="btn" data-act="flip" style="width:100%">↻ Flip &amp; tune this agent</button>';
     if (m.born) {
       d += '<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn lime" data-act="share" style="flex:1 1 auto">Post its birth on X</button><button type="button" class="btn dark" data-act="mint">Mint · 0.001 ETH</button><button type="button" class="btn" data-act="replay">Replay</button></div>';
@@ -313,7 +314,11 @@
       }
     }
     d += '<span style="font-size:12px;line-height:1.45;color:#6b6b6b">' + (m.born ? 'Read from your words: ' + esc(m.parsed.cues.join(', ')) + '. ' : '') + 'Demo runs on sample price data. Seasons use real Robinhood Chain prices.</span>';
-    if (st.face !== 'back') setHTML('device', d);
+    if (st.face !== 'back') {
+      var dv = $('device');
+      if (!$('devHead')) { dv.innerHTML = '<div id="devHead"></div><div id="devMain" style="display:flex;flex-direction:column;gap:12px"></div><div id="devActs" style="display:flex;flex-direction:column;gap:12px"></div>'; dv._h = null; }
+      setHTML('devHead', dh); setHTML('devMain', dm); setHTML('devActs', d);
+    }
 
     // dying + duel
     var dying = SAMPLES.slice().sort(function (a, b) { return a.score - b.score; }).slice(0, 3), WHY = ['owner missed 2 questions', 'drawdown near the limit', 'chased 4 tops this week'];
