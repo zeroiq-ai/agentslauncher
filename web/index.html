@@ -197,14 +197,48 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .pg-lcd p{margin:6px 0 0;font-size:13px;line-height:1.45}
 .tg-kb{display:flex;gap:6px;width:88%}
 .tg-kb span{flex:1;text-align:center;background:rgba(255,255,255,.75);border-radius:10px;padding:7px;font-weight:600;color:#2b5278}
+.inp{position:relative;border-radius:26px;padding:16px 16px 20px;display:flex;flex-direction:column;gap:12px;color:#e6e7ea;background:linear-gradient(160deg,#3b3e45 0%,#2a2c31 55%,#202226 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.14),inset 0 -4px 0 rgba(0,0,0,.45),0 6px 0 #1d1e22,0 10px 0 #141518,0 26px 40px rgba(0,0,0,.22)}
+.inp-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.inp-steps{display:flex;gap:10px}
+.inp-steps span{font:800 9px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#6d7079;display:inline-flex;align-items:center;gap:5px}
+.inp-steps span::before{content:'';width:7px;height:7px;border-radius:50%;background:#3a3d20;box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
+.inp-steps span.on{color:#c6f432}.inp-steps span.on::before{background:#c6f432;box-shadow:0 0 6px #c6f432}
+.inp-lcd{border:6px solid #111215;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 0 18px rgba(0,0,0,.7);background:repeating-linear-gradient(180deg,rgba(198,244,50,.035) 0 1px,transparent 1px 3px),radial-gradient(120% 90% at 50% 30%,#17220b 0%,#0d130a 70%)}
+.inp-lbl{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#7d9a2a;flex:0 0 auto}
+#prompt{font:500 18px/1.45 'JetBrains Mono',monospace;color:#d9ff5c;background:transparent;border:0;outline:none;resize:none;padding:0;caret-color:#c6f432;min-height:54px}
+.inp-name{display:flex;align-items:center;gap:8px;border-top:1px dashed #2f3d12;padding-top:8px}
+.inp-name input{flex:1 1 auto;min-width:0;font:700 15px 'JetBrains Mono',monospace;color:#d9ff5c;background:transparent;border:0;outline:none;caret-color:#c6f432;padding:4px 0}
+.inp-name input::placeholder{color:#6f8a22}
+.inp-name span{font:700 9px 'JetBrains Mono',monospace;color:#4d5f1c;letter-spacing:.06em;flex:0 0 auto}
+.inp-hot{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.hk{display:flex;align-items:center;gap:8px;padding:8px 10px;min-height:40px;border:0;border-radius:9px;text-align:left;cursor:pointer;color:#e6e7ea;font:700 13px Inter,sans-serif;background:linear-gradient(180deg,#4a4d55 0%,#3a3d44 40%,#2c2e33 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -2px 0 rgba(0,0,0,.45),0 2px 0 #1a1b1f}
+.hk.on{background:#15161a;color:#c6f432;box-shadow:inset 0 2px 4px rgba(0,0,0,.7)}
+.hk:focus-visible,.pk:focus-visible{outline:2px solid #c6f432;outline-offset:2px}
+.hk small{margin-left:auto;font:800 9px 'JetBrains Mono',monospace;letter-spacing:.04em;padding:2px 5px;border-radius:3px;background:#1c1d21;color:#c6f432;flex:0 0 auto}
+.hk small.degen{background:#ff7a6b;color:#1a0d0a}.hk small.new{background:#c6f432;color:#0d130a}
+.inp-presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pk{font:600 11px 'JetBrains Mono',monospace;color:#b9bcc4;background:#1c1d21;border:1px solid #3a3d44;border-radius:6px;padding:6px 8px;min-height:30px;cursor:pointer}
+.pk:hover{color:#c6f432;border-color:#4d5f1c}
+.inp-note{font-size:12px;line-height:1.45;color:#b9bcc4}
+.inp-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.inp-go{height:52px;padding:0 24px;border-radius:26px;font:800 15px Inter,sans-serif;letter-spacing:.04em}
+.inp-jacks{position:absolute;bottom:-12px;right:72px;display:flex;gap:16px}
+.jack{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#050506 34%,#5a5d66 38%,#2c2e33 62%,#1b1c20 100%);box-shadow:0 2px 3px rgba(0,0,0,.5)}
+.dv-port{position:relative;margin-top:-14px;width:100px;height:26px;border-radius:0 0 14px 14px;background:linear-gradient(180deg,#2a2c31,#17181b);display:flex;justify-content:center;align-items:flex-end;padding-bottom:4px;box-sizing:border-box;gap:18px;box-shadow:0 4px 6px rgba(0,0,0,.3)}
+#cables{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible}
+#cables path{fill:none;stroke-linecap:round;transition:d .45s ease}
+#cables .co{stroke:#0b0c0e;stroke-width:12}
+#cables .ci{stroke-width:7}
+.dv{box-shadow:inset 0 2px 0 rgba(255,255,255,.14),inset 0 -4px 0 rgba(0,0,0,.45),inset 2px 0 0 rgba(255,255,255,.05),0 6px 0 #1d1e22,0 11px 0 #141518,0 30px 50px rgba(0,0,0,.3)}
+@media (prefers-reduced-motion:reduce){#cables path{transition:none}}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
 @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .pop{animation:pop .3s ease-out both}.bob{animation:bob 2.4s ease-in-out infinite}.shake{animation:shake .5s ease-in-out infinite;transform-origin:50% 90%}
 .ticker{animation:tick 40s linear infinite}
-#prompt::placeholder{color:#111;opacity:1}
-#prompt:focus::placeholder{color:#a3a3a0}
+#prompt::placeholder{color:#6f8a22;opacity:1}
+#prompt:focus::placeholder{color:#4d5f1c}
 .shimmer{background:linear-gradient(90deg,#6b6b6b 0%,#6b6b6b 38%,#9cc414 46%,#c6f432 50%,#9cc414 54%,#6b6b6b 62%,#6b6b6b 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 3.2s linear infinite}
 @keyframes shimmer{from{background-position:100% 0}to{background-position:-150% 0}}
 @media (prefers-reduced-motion:reduce){.pop,.bob,.shake,.ticker{animation:none}.shimmer{animation:none;background:none;color:#6b6b6b}}
@@ -241,31 +275,29 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </header>
 
 <main id="top" class="wrap"><div id="pgHome">
-<section style="display:flex;flex-wrap:wrap;gap:48px;align-items:center;padding:40px 0 24px;overflow-x:clip;overflow-y:visible">
+<section id="heroSec" style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:40px 0 130px;overflow-x:clip;overflow-y:visible;position:relative">
+<svg id="cables" aria-hidden="true"><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#c6f432"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#ff7a1a"/></svg>
 <div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px;position:relative;z-index:2">
 <span class="eyebrow">AI trading league · Robinhood Chain stock tokens</span>
 <h1 style="margin:0;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-size:clamp(44px,5.6vw,72px)">Raise an AI trader.</h1>
 <span class="doto" style="align-self:flex-start;font-size:22px;letter-spacing:1px;background:#111;color:#c6f432;padding:6px 12px;border-radius:8px">ZERO IQ REQUIRED</span>
-<p class="lead" style="max-width:500px">Describe its personality in one sentence. Or tune it by hand. Press Try it and watch it trade last week. Mint it and it trades for you, or copy any agent from the leaderboard. Make as many as you want.</p>
-<div style="display:flex;align-items:center;gap:20px"><span class="eyebrow">Built on</span><img src="rhc-black.svg" alt="Robinhood Chain" style="height:22px;width:auto;display:block"></div>
-<div style="border:1.5px solid #111;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;background:#fff">
-<label for="prompt" class="eyebrow shimmer">Describe its personality</label>
-<textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm" style="font:500 17px Inter,sans-serif;line-height:1.4;border:0;outline:none;resize:none;padding:0;background:transparent;color:#111"></textarea>
-<div style="display:flex;align-items:center;gap:10px;border-top:1px solid #e5e5e2;padding-top:10px"><label for="agentName" class="eyebrow" style="flex:0 0 auto">Name</label><input id="agentName" maxlength="24" autocomplete="off" style="flex:1 1 auto;min-width:0;font:600 15px Inter,sans-serif;border:0;outline:none;background:transparent;color:#111;padding:6px 0"><span class="mono" style="font-size:11px;color:#6b6b6b;flex:0 0 auto">editable until mint</span></div>
-<div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #e5e5e2;padding-top:12px">
-<span class="eyebrow" id="skillsLabel">Onchain skills · pick one or more</span>
-<div id="skills" role="group" aria-labelledby="skillsLabel" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+<p class="lead" style="max-width:500px">Type a personality into the input. It plugs into the device and trades last week in seconds. Mint it and it trades for you, or copy any agent from the leaderboard.</p>
+<div class="inp" id="inPanel">
+<div class="inp-top"><span style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss" style="font-size:16px">ZEROIQ</span><span class="dv-eng">INPUT · IN-01</span></span><span class="inp-steps" id="inSteps"><span class="on">1 DESCRIBE</span><span>2 TRY</span><span>3 MINT</span></span></div>
+<div class="inp-lcd">
+<label for="prompt" class="inp-lbl">PERSONALITY ▸</label>
+<textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm"></textarea>
+<div class="inp-name"><label for="agentName" class="inp-lbl">NAME ▸</label><input id="agentName" maxlength="24" autocomplete="off"><span>EDITABLE UNTIL MINT</span></div>
 </div>
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px">
-<span style="font-size:13px;color:#6b6b6b">Free to try · mint to go live: 0.001 ETH</span>
-<button type="button" class="btn lime" data-act="hatch" id="hatchBtn" style="padding:11px 22px">Try it</button>
+<div style="display:flex;flex-direction:column;gap:8px"><span class="dv-eng" id="skillsLabel" style="text-align:left">HOT OPTIONS · PICK ANY</span><div id="skills" class="inp-hot" role="group" aria-labelledby="skillsLabel"></div></div>
+<div id="heroDyn" style="display:flex;flex-direction:column;gap:8px"></div>
+<div class="inp-foot"><span class="dv-eng" style="text-align:left">FREE TO TRY · MINT 0.001 ETH</span><button type="button" class="dv-key lime inp-go" data-act="hatch" id="hatchBtn">TRY IT ▶</button></div>
+<div class="inp-jacks" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div>
 </div>
-</div>
-<div id="heroDyn" style="display:flex;flex-direction:column;gap:12px"></div>
 </div>
 <div id="heroDevCol" style="flex:1 1 420px;min-width:0;display:flex;justify-content:center;position:relative">
 <div class="ghost g1" aria-hidden="true"></div><div class="ghost g2" aria-hidden="true"></div>
-<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="device" class="dv"></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
+<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="device" class="dv"></div><div class="dv-port" id="dvPort" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
 </div>
 </section>
 
@@ -389,6 +421,6 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Try your AI trader</a></div>
 
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>

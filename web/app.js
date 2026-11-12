@@ -208,6 +208,29 @@
     ['basket', 'Publish a basket', 'Builds an index of its picks that others can follow', ''],
     ['memes', 'Meme tokens', 'Trades memecoins on Robinhood Chain, including stock-paired ones', 'degen']
   ];
+  var HOT = [
+    ['aibasket', 'AI basket', 'Buys a basket of AI stocks: NVDA, PLTR, AMZN', 'HOT', { skills: ['basket'], watch: ['NVDA', 'PLTR', 'AMZN'] }],
+    ['earnings', 'Earnings hunter', 'Trades the move around earnings at half size', 'HOT', { dna: { freq: 65 } }],
+    ['memes', 'Meme sniper', 'New memecoins past a $1M cap, max 2% a trade', 'DEGEN', { skills: ['memes'] }],
+    ['copytop', 'Follow top agents', 'Weighs what the top 10 agents just did', 'NEW', { conn: ['top'] }],
+    ['xalpha', 'X alpha', 'Reads posts from X accounts you add', 'NEW', { conn: ['x'] }],
+    ['weekend', 'Weekend mode', 'Stock tokens trade 24/7, so it does too', '24/7', {}],
+    ['yield', 'Yield on idle', 'Parks idle USDG in Morpho, about 7% a year', '~7%', { skills: ['earn'] }],
+    ['hedge', 'Auto-hedge', 'Opens a hedge, 2x max, when the market drops', '2X', { skills: ['perps'] }]
+  ];
+  function hotHTML() {
+    return HOT.map(function (o) { var on = !!(st.hot && st.hot[o[0]]); return '<button type="button" class="hk' + (on ? ' on' : '') + '" data-act="hot" data-k="' + o[0] + '" aria-pressed="' + on + '" title="' + o[2] + '"><span class="dv-ledk' + (on ? ' on' : '') + '"></span><span>' + o[1] + '</span><small class="' + (o[3] === 'DEGEN' ? 'degen' : (o[3] === 'NEW' ? 'new' : '')) + '">' + o[3] + '</small></button>'; }).join('');
+  }
+  function toggleHot(k) {
+    var o = null; HOT.forEach(function (x) { if (x[0] === k) o = x; }); if (!o) return;
+    st.hot = Object.assign({}, st.hot || {}); var on = st.hot[k] = !st.hot[k], p = o[4];
+    (p.skills || []).forEach(function (x) { st.skills[x] = on; });
+    if (on) (p.watch || []).forEach(function (x) { st.tune.watch[x] = true; });
+    (p.conn || []).forEach(function (x) { st.tune.conn[x] = on; });
+    if (on && p.dna) st.dnaPatch = Object.assign({}, st.dnaPatch || {}, p.dna);
+    st.skills.spot = true;
+  }
+  function hotNames() { return HOT.filter(function (o) { return st.hot && st.hot[o[0]]; }).map(function (o) { return o[1]; }); }
   function skillNames() { return SKILLS.filter(function (k) { return st.skills[k[0]]; }).map(function (k) { return k[1]; }); }
   function skillsHTML() {
     return SKILLS.map(function (k) {
@@ -220,7 +243,7 @@
     var watch = Object.keys(st.tune.watch).filter(function (t) { return st.tune.watch[t]; });
     return (d.style === 'momentum' ? 'BUY after ' + k.momN + ' green candle' + (k.momN > 1 ? 's' : '') : 'BUY after ' + k.dipN + ' red candle' + (k.dipN > 1 ? 's' : '')) + ' · size ' + Math.round(k.size * 100) + '% of cash\n' +
       'SELL at +' + ((k.tp - 1) * 100).toFixed(1) + '% or −' + ((1 - k.sl) * 100).toFixed(1) + '% · hold ≥ ' + k.minHold + 'h\n' +
-      'stops for the day at −' + limit + '% · trades ' + (watch.length ? watch.join(' ') : 'nothing yet') + '\nstyle: ' + (lean(d) >= 50 ? 'momentum ' + lean(d) : 'dip ' + (99 - lean(d))) + '% · skills: ' + skillNames().join(', ') + (st.md ? ' · playbook: ' + st.md.name : '');
+      'stops for the day at −' + limit + '% · trades ' + (watch.length ? watch.join(' ') : 'nothing yet') + (hotNames().length ? '\nhot: ' + hotNames().join(', ') : '') + '\nstyle: ' + (lean(d) >= 50 ? 'momentum ' + lean(d) : 'dip ' + (99 - lean(d))) + '% · skills: ' + skillNames().join(', ') + (st.md ? ' · playbook: ' + st.md.name : '');
   }
   var TUNE_PRESETS = { ZEN: { patience: 85, fomo: 10, risk: 25, freq: 25, style: 'dip' }, DIP: { patience: 65, fomo: 25, risk: 45, freq: 45, style: 'dip' }, MOMO: { patience: 30, fomo: 70, risk: 55, freq: 60, style: 'momentum' }, DEGEN: { patience: 10, fomo: 95, risk: 95, freq: 90, style: 'momentum' } };
   // ---------- device (2000s handheld, same size on both faces) ----------
@@ -396,13 +419,41 @@
       limeKey());
     if (fk) { var n = document.querySelector('#device ' + fk); if (n) n.focus(); }
   }
+  var cableKey = '';
+  function drawCables() {
+    var svg = $('cables'), sec = $('heroSec'), col = $('heroDevCol');
+    if (!svg || !sec) return;
+    if (!col || !col.contains($('devWrap')) || page !== 'home') { svg.style.display = 'none'; cableKey = ''; return; }
+    svg.style.display = '';
+    var js = document.querySelectorAll('.inp-jacks .jack'), ps = document.querySelectorAll('#dvPort .jack');
+    if (js.length < 2 || ps.length < 2) return;
+    var r0 = sec.getBoundingClientRect();
+    var c = function (el) { var r = el.getBoundingClientRect(); return [r.left + r.width / 2 - r0.left, r.top + r.height / 2 - r0.top]; };
+    var A = [c(js[0]), c(js[1])], B = [c(ps[0]), c(ps[1])];
+    if (st.face === 'back') B = [B[1], B[0]];
+    var f = function (v) { return v.toFixed(1); };
+    var P = [0, 1].map(function (i) {
+      var x1 = A[i][0], y1 = A[i][1], x2 = B[i][0], y2 = B[i][1];
+      if (y2 > y1 + 220 && Math.abs(x2 - x1) < 240) {
+        var side = 8 + i * 12;
+        return 'M' + f(x1) + ' ' + f(y1) + ' C' + f(x1) + ' ' + f(y1 + 60) + ' ' + side + ' ' + f(y1 + 30) + ' ' + side + ' ' + f(y1 + 120) + ' L' + side + ' ' + f(y2 + 10) + ' C' + side + ' ' + f(y2 + 80) + ' ' + f(x2) + ' ' + f(y2 + 80) + ' ' + f(x2) + ' ' + f(y2);
+      }
+      var sag = Math.max(y1, y2) + 70 + i * 16;
+      return 'M' + f(x1) + ' ' + f(y1) + ' C' + f(x1) + ' ' + f(sag) + ' ' + f(x2) + ' ' + f(sag) + ' ' + f(x2) + ' ' + f(y2);
+    });
+    var key = P.join('|'); if (key === cableKey) return; cableKey = key;
+    [['cAo', 0], ['cA', 0], ['cBo', 1], ['cB', 1]].forEach(function (q) { var el = $(q[0]); el.setAttribute('d', P[q[1]]); try { el.style.d = 'path("' + P[q[1]] + '")'; } catch (e) {} });
+  }
+  window.addEventListener('resize', function () { drawCables(); });
   function refresh() { if (st.face === 'back') renderBack(); else render(); }
   function flip(to) {
     var el = $('device');
-    var swap = function () { st.face = to; buildFace(); if (to === 'back') renderBack(); else render(); };
+    var port = $('dvPort');
+    var swap = function () { st.face = to; buildFace(); if (to === 'back') renderBack(); else render(); drawCables(); };
     if (reduce) { swap(); return; }
     el.style.transition = 'transform .16s ease-in';
     el.style.transform = 'perspective(1400px) rotateY(90deg)';
+    if (port) { port.style.transition = el.style.transition; port.style.transform = 'perspective(600px) rotateY(90deg)'; }
     setTimeout(function () {
       swap();
       el.style.transition = 'none';
@@ -410,6 +461,7 @@
       void el.offsetWidth;
       el.style.transition = 'transform .18s ease-out';
       el.style.transform = 'perspective(1400px) rotateY(0deg)';
+      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(600px) rotateY(-90deg)'; void port.offsetWidth; port.style.transition = 'transform .18s ease-out'; port.style.transform = 'perspective(600px) rotateY(0deg)'; }
     }, 170);
   }
 
@@ -426,42 +478,28 @@
     var m = model();
     if (nmEl && st.ctx === 'home') nmEl.placeholder = m.autoName;
     var p = prompt();
-    $('hatchBtn').textContent = m.born ? 'Try another' : 'Try it';
-    setHTML('skills', skillsHTML());
+    $('hatchBtn').textContent = m.born ? 'TRY AGAIN ▶' : 'TRY IT ▶';
+    setHTML('skills', hotHTML());
 
-    // hero dynamic area
+    // hero dynamic area: presets inside the input panel
     var hd = '';
-    if (/^\s*@\w+/.test(p)) hd += '<span style="font-size:13px;line-height:1.45;color:#4a4a4a;background:#f7f7f5;border:1px solid #e5e5e2;border-radius:10px;padding:8px 12px">Fan-made twin, built from public posts. It is not the real account and does not speak for it.</span>';
-    if (!m.born && !m.hatching) {
-      hd += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span style="font-size:13px;color:#6b6b6b">Try</span>';
-      ['buy the dip on NVDA, stay calm', 'chase green candles, aggressive', 'trade rarely, careful sizing'].forEach(function (t, i) {
-        hd += '<button type="button" data-act="idea" data-i="' + i + '" style="font:500 13px Inter,sans-serif;color:#2f2f2f;background:#f7f7f5;border:1px solid #e5e5e2;border-radius:999px;padding:8px 12px;min-height:44px;cursor:pointer">' + t + '</button>';
-      });
-      hd += '<button type="button" data-act="twin" style="font:600 13px Inter,sans-serif;color:#111;background:#fff;border:1.5px dashed #111;border-radius:999px;padding:8px 14px;min-height:44px;cursor:pointer">or copy a CT account by @handle</button></div>';
-    }
-    if (m.born) {
-      hd += '<div class="card" style="padding:14px 16px;gap:10px"><span class="eyebrow">Next steps</span>';
-      hd += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:15px"><span class="mono" style="color:#6b6b6b;margin-right:8px">' + (st.answered ? '✓' : '1') + '</span>Answer its first question</span>' + stepBtn(st.answered, st.answered ? 'Fed' : 'Answer', 'ask') + '</div>';
-      hd += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:15px"><span class="mono" style="color:#6b6b6b;margin-right:8px">' + (st.tg ? '✓' : '2') + '</span>Get its messages in Telegram</span>' + stepBtn(st.tg, st.tg ? 'Soon' : 'Connect', 'tg') + '</div>';
-      hd += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:15px"><span class="mono" style="color:#6b6b6b;margin-right:8px">' + (st.joined ? '✓' : '3') + '</span>Mint it and go live</span>' + stepBtn(st.joined, st.joined ? 'On the list' : 'Go live', 'mint') + '</div>';
-      if (st.askOpen && !st.answered) {
-        hd += '<div style="border-top:1px solid #e5e5e2;padding-top:10px;display:flex;flex-direction:column;gap:8px"><span style="font-size:15px">NVDA reports earnings tomorrow. Hold through it, or sell before?</span><div style="display:flex;gap:8px"><button type="button" class="btn sm" data-act="hold">Hold</button><button type="button" class="btn sm" data-act="sell">Sell before</button></div></div>';
-      }
-      if (st.tg) hd += '<span style="font-size:13px;color:#4a4a4a">The Telegram bot opens with Season 0. You are on the list.</span>';
-      hd += '</div>';
-    }
+    if (/^\s*@\w+/.test(p)) hd += '<span class="inp-note">Fan-made twin, built from public posts. It is not the real account and does not speak for it.</span>';
+    hd += '<div class="inp-presets"><span class="dv-eng">PRESETS</span>' + IDEAS.map(function (t, i) { return '<button type="button" class="pk" data-act="idea" data-i="' + i + '">' + t + '</button>'; }).join('') + '<button type="button" class="pk" data-act="twin">@handle twin</button></div>';
+    var stepN = (st.mintOpen || st.flow) ? 3 : ((m.born || m.hatching) ? 2 : 1);
+    var stEls = document.querySelectorAll('#inSteps span'); for (var si = 0; si < stEls.length; si++) stEls[si].className = si < stepN ? 'on' : '';
     setHTML('heroDyn', hd);
 
     // device
     if (!$('dvFace')) buildShell();
     if (st.face !== 'back') frontRender(m);
     $('device').className = 'dv' + (st.tint ? ' t' + st.tint : '') + (st.readonly ? ' ro' : '');
-    if (st.ctx === 'mine' || st.ctx === 'public') setHTML('devNote', 'Sample prices. Live trading opens with Season 0.'); else setHTML('devNote', (m.born ? 'Read from your words: ' + esc(m.parsed.cues.join(', ')) + '. ' : '') + 'The backtest runs on sample prices and simulates spot trades only.');
+    if (st.ctx === 'mine' || st.ctx === 'public') setHTML('devNote', 'Sample prices. Live trading opens with Season 0.'); else setHTML('devNote', st.ctx === 'home' ? '' : (m.born ? 'Read from your words: ' + esc(m.parsed.cues.join(', ')) + '. ' : '') + 'The backtest runs on sample prices and simulates spot trades only.');
 
     // most copied + duel
     setHTML('dying', PUB.slice().sort(function (a, b) { return b.copiers - a.copiers; }).slice(0, 3).map(function (s) {
       return '<div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #f1f1ee"><img alt="" style="width:40px;height:40px;background:#0f0f0f;border-radius:8px;flex:0 0 auto" src="' + robot(s.prompt, { preset: s.preset, stage: 3, mood: 'happy' }) + '"><div style="display:flex;flex-direction:column;flex:1 1 auto;min-width:0"><strong style="font-size:15px;font-weight:600">' + esc(s.name) + '</strong><span class="mono" style="font-size:12px;color:#6b6b6b">' + s.copiers + ' copiers · ' + fmt(s.avg) + ' / wk</span></div><a class="btn sm" href="#/agent/' + s.id + '">Copy</a></div>';
     }).join(''));
+    drawCables();
     setHTML('duel', st.duel ? '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:#f7f7f5;border:1px solid #e5e5e2;border-radius:12px;padding:12px 16px"><span style="font-size:15px">Duel queued: <strong>' + esc((m.born ? m.name : 'your agent') + ' vs ' + st.duel) + '</strong>. Starts with the next round.</span><button type="button" class="btn sm" data-act="duelcancel">Cancel</button></div>' : '');
   }
 
@@ -489,7 +527,7 @@
   }
 
   // ---------- events ----------
-  var IDEAS = ['buy the dip on NVDA, stay calm', 'chase green candles, aggressive', 'trade rarely, careful sizing'];
+  var IDEAS = ['make me rich, make no mistakes', 'buy the dip on NVDA, stay calm', 'chase green candles, aggressive', 'trade rarely, careful sizing'];
   var EXAMPLES = [
     'make me rich, make no mistakes',
     'buy the dip on NVDA, stay calm',
@@ -603,6 +641,7 @@
     else if (a === 'notify' && st.agentRef) { var nk = b.getAttribute('data-k'); st.agentRef.notify = st.agentRef.notify || {}; st.agentRef.notify[nk] = !st.agentRef.notify[nk]; saveMe(); renderMe(); }
     else if (a === 'tglink') { if (ME.tg) ME.tg.linked = true; saveMe(); renderMe(); }
     else if (a === 'copycode') { try { navigator.clipboard.writeText('/start ' + (ME.tg ? ME.tg.code : '')); } catch (er) {} b.textContent = 'Copied'; }
+    else if (a === 'hot') { toggleHot(b.getAttribute('data-k')); render(); if (st.face === 'back') renderBack(); }
     else if (a === 'tf') { st.tf = b.getAttribute('data-v'); render(); }
     else if (a === 'pyes' || a === 'pno') { applyPager(b.getAttribute('data-id'), a === 'pyes'); refresh(); }
     else if (a === 'bfilter') { boardFilter = b.getAttribute('data-v'); renderBoard(); }
@@ -813,7 +852,7 @@
 
   // load any agent into the one device on the page
   function loadAgent(a, ctx) {
-    st.ctx = ctx; st.readonly = ctx === 'public'; st.agentRef = a; st.tint = tintOf(a); st.propDone = Object.assign({}, a.propDone || {}); st.pagerOff = false;
+    st.ctx = ctx; st.readonly = ctx === 'public'; st.agentRef = a; st.hot = Object.assign({}, a.hot || {}); st.tint = tintOf(a); st.propDone = Object.assign({}, a.propDone || {}); st.pagerOff = false;
     st.subject = a.prompt; st.phase = 'born'; st.btick = 0; st.rtick = undefined; st.tick = 999;
     st.nameOverride = a.name; st.presetOverride = a.preset;
     st.dnaPatch = Object.assign({}, a.dna); st.skills = Object.assign({}, a.skills);
@@ -826,7 +865,7 @@
     if (st.ctx !== 'mine' || !st.agentRef) return;
     var a = st.agentRef, m = model();
     a.dna = Object.assign({}, m.dna); a.lean = st.tune.lean; a.limit = st.tune.limit; a.watch = Object.assign({}, st.tune.watch); a.skills = Object.assign({}, st.skills);
-    a.conn = Object.assign({}, st.tune.conn); a.handles = st.tune.handles.slice(); a.md = st.md ? { name: st.md.name, size: st.md.size, lines: st.md.lines, title: st.md.title } : null; a.xp = st.xp || 0; a.answered = st.answered || null; a.propDone = Object.assign({}, st.propDone || {}); a.limitSet = !!st.tune.limitSet;
+    a.conn = Object.assign({}, st.tune.conn); a.handles = st.tune.handles.slice(); a.md = st.md ? { name: st.md.name, size: st.md.size, lines: st.md.lines, title: st.md.title } : null; a.xp = st.xp || 0; a.answered = st.answered || null; a.propDone = Object.assign({}, st.propDone || {}); a.hot = Object.assign({}, st.hot || {}); a.limitSet = !!st.tune.limitSet;
     var s0 = agentStats(a.dna); a.avg = s0.avg; a.dd = s0.dd; a.score = s0.score; a.all = s0.all;
     saveMe();
   }
@@ -838,7 +877,7 @@
   }
   function mintCurrent() {
     var m = model();
-    var a = newAgentFrom({ name: m.name, prompt: st.subject || m.subject, preset: m.preset, dna: Object.assign({}, m.dna), lean: st.tune.lean, limit: st.tune.limit, watch: Object.assign({}, st.tune.watch), skills: Object.assign({}, st.skills), conn: Object.assign({}, st.tune.conn), handles: st.tune.handles.slice(), md: st.md ? { name: st.md.name, size: st.md.size, lines: st.md.lines, title: st.md.title } : null, propDone: Object.assign({}, st.propDone || {}), limitSet: !!st.tune.limitSet });
+    var a = newAgentFrom({ name: m.name, prompt: st.subject || m.subject, preset: m.preset, dna: Object.assign({}, m.dna), lean: st.tune.lean, limit: st.tune.limit, watch: Object.assign({}, st.tune.watch), skills: Object.assign({}, st.skills), conn: Object.assign({}, st.tune.conn), handles: st.tune.handles.slice(), md: st.md ? { name: st.md.name, size: st.md.size, lines: st.md.lines, title: st.md.title } : null, propDone: Object.assign({}, st.propDone || {}), hot: Object.assign({}, st.hot || {}), limitSet: !!st.tune.limitSet });
     st.mintOpen = false; st.flow = null; homeState = null;
     location.hash = '#/me/' + a.id;
   }
@@ -886,7 +925,7 @@
       renderMe();
     }
     if (next !== 'home') try { window.scrollTo(0, 0); } catch (e) {}
-    page = next; show(next); renderHeader();
+    page = next; show(next); renderHeader(); setTimeout(drawCables, 30);
   }
   window.addEventListener('hashchange', route);
   function renderHeader() {
@@ -986,6 +1025,7 @@
   renderStatic();
   render();
   route();
+  setTimeout(drawCables, 300); try { document.fonts && document.fonts.ready.then(function () { cableKey = ''; drawCables(); }); } catch (e) {}
   try { document.querySelector('.ghost.g1').innerHTML = ghostDevice(1, PUB[7], 0); document.querySelector('.ghost.g2').innerHTML = ghostDevice(2, PUB[5], 1); } catch (e) {}
   if (!reduce) setTimeout(typeTick, 600); else $('prompt').placeholder = EXAMPLES[0];
   if (!reduce) {
