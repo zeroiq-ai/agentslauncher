@@ -153,6 +153,14 @@
   function set(patch) { Object.keys(patch).forEach(function (k) { st[k] = patch[k]; }); render(); }
 
   function prompt() { return $('prompt').value; }
+  var typeTimer = null;
+  function typeInto(text) {
+    var el = $('prompt'); if (typeTimer) clearInterval(typeTimer);
+    if (reduce) { el.value = text; render(); return; }
+    var n = 0; el.value = '';
+    typeTimer = setInterval(function () { n += 2; el.value = text.slice(0, n); if (n >= text.length) { clearInterval(typeTimer); typeTimer = null; } render(); }, 22);
+    sfx('tick');
+  }
   function startHatch(text) {
     $('prompt').value = text;
     if (st.face === 'back' && $('dvFace')) { st.face = 'front'; buildFace(); }
@@ -316,9 +324,9 @@
     setHTML('scrTop', '<span>' + screenTop(m) + '</span><span>NVDA · 24/7</span>');
     var s = '';
     if (m.hatching) {
-      s += '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;flex:1 1 auto"><img alt="" class="' + (bt < 14 ? 'shake' : 'pop') + '" style="width:140px;height:140px" src="' + robot(m.subject, { preset: m.preset, stage: bt < 14 ? 0 : 1, mood: 'happy' }) + '"><div style="display:flex;flex-direction:column;gap:6px;font-size:13px">';
+      s += '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;flex:1 1 auto"><img alt="" class="' + (bt < 8 ? 'shake' : 'pop') + '" style="width:140px;height:140px" src="' + robot(m.subject, { preset: m.preset, stage: bt < 8 ? 0 : 1, mood: 'happy' }) + '"><div style="display:flex;flex-direction:column;gap:6px;font-size:13px">';
       ['reading its personality', 'compiling rules', 'hatching', 'replaying last week'].forEach(function (l, i) {
-        var dn = bt >= (i + 1) * 7, cur = !dn && bt >= i * 7;
+        var dn = bt >= (i + 1) * 4, cur = !dn && bt >= i * 4;
         s += '<span style="color:' + (dn ? '#c6f432' : (cur ? '#d9ff5c' : '#4d5f1c')) + '">' + (dn ? '✓' : (cur ? '›' : '·')) + ' ' + l + '</span>';
       });
       s += '</div></div>';
@@ -441,11 +449,13 @@
         var side = 8 + i * 12;
         return 'M' + f(x1) + ' ' + f(y1) + ' C' + f(x1) + ' ' + f(y1 + 60) + ' ' + side + ' ' + f(y1 + 30) + ' ' + side + ' ' + f(y1 + 120) + ' L' + side + ' ' + f(y2 + 10) + ' C' + side + ' ' + f(y2 + 80) + ' ' + f(x2) + ' ' + f(y2 + 80) + ' ' + f(x2) + ' ' + f(y2);
       }
-      var pr = $('presetRow'), pb = pr && pr.offsetHeight ? pr.getBoundingClientRect().bottom - r0.top : 0;
-      var sag = Math.max(y1, y2 + 40, pb + 30) + 40 + i * 12;
+      var sag = Math.max(y1, y2) + 80 + i * 12;
       return 'M' + f(x1) + ' ' + f(y1) + ' C' + f(x1) + ' ' + f(sag) + ' ' + f(x2) + ' ' + f(sag) + ' ' + f(x2) + ' ' + f(y2);
     });
     var key = P.join('|'); if (key === cableKey) return; cableKey = key;
+    var boot = function (id, x, y) { var r = $(id); if (!r) return; r.setAttribute('x', (x - 5).toFixed(1)); r.setAttribute('y', (y + 4).toFixed(1)); r.setAttribute('width', 10); r.setAttribute('height', 14); r.setAttribute('rx', 3); };
+    boot('bA1', A[0][0], A[0][1]); boot('bA2', B[0][0], B[0][1]); boot('bB1', A[1][0], A[1][1]); boot('bB2', B[1][0], B[1][1]);
+    boot('bA1t', A[0][0], A[0][1]); boot('bA2t', B[0][0], B[0][1]); boot('bB1t', A[1][0], A[1][1]); boot('bB2t', B[1][0], B[1][1]);
     [['cAo', 0], ['cA', 0], ['cAt', 0], ['cAh', 0], ['cBo', 1], ['cB', 1], ['cBt', 1], ['cBh', 1]].forEach(function (q) { var el = $(q[0]); el.setAttribute('d', P[q[1]]); try { el.style.d = 'path("' + P[q[1]] + '")'; } catch (e) {} });
   }
   window.addEventListener('resize', function () { drawCables(); });
@@ -455,18 +465,19 @@
     var port = $('dvPort');
     var swap = function () { st.face = to; buildFace(); if (to === 'back') renderBack(); else render(); drawCables(); };
     if (reduce) { swap(); return; }
-    el.style.transition = 'transform .16s ease-in';
-    el.style.transform = 'perspective(1400px) rotateY(90deg)';
-    if (port) { port.style.transition = el.style.transition; port.style.transform = 'perspective(600px) rotateY(90deg)'; }
+    var dg = to === 'back' ? 90 : -90;
+    el.style.transition = 'transform .2s ease-in';
+    el.style.transform = 'perspective(1400px) rotateY(' + dg + 'deg)';
+    if (port) { port.style.transition = el.style.transition; port.style.transform = 'perspective(600px) rotateY(' + dg + 'deg)'; }
     setTimeout(function () {
       swap();
       el.style.transition = 'none';
-      el.style.transform = 'perspective(1400px) rotateY(-90deg)';
+      el.style.transform = 'perspective(1400px) rotateY(' + (-dg) + 'deg)';
       void el.offsetWidth;
-      el.style.transition = 'transform .18s ease-out';
+      el.style.transition = 'transform .22s ease-out';
       el.style.transform = 'perspective(1400px) rotateY(0deg)';
-      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(600px) rotateY(-90deg)'; void port.offsetWidth; port.style.transition = 'transform .18s ease-out'; port.style.transform = 'perspective(600px) rotateY(0deg)'; }
-    }, 170);
+      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(600px) rotateY(' + (-dg) + 'deg)'; void port.offsetWidth; port.style.transition = 'transform .22s ease-out'; port.style.transform = 'perspective(600px) rotateY(0deg)'; }
+    }, 210);
   }
 
   function bar(label, v, col) {
@@ -490,7 +501,7 @@
     // hero dynamic area: presets inside the input panel
     var hd = '';
     if (/^\s*@\w+/.test(p)) hd += '<span class="inp-note">Fan-made twin, built from public posts. It is not the real account and does not speak for it.</span>';
-    setHTML('presetRow', st.ctx === 'home' ? IDEAS.map(function (t, i) { return '<button type="button" class="pk" data-act="idea" data-i="' + i + '">' + t + '</button>'; }).join('') + '<button type="button" class="pk" data-act="twin">@handle twin</button>' : '');
+    hd += '<div class="inp-presets" role="group" aria-label="Presets">' + IDEAS.map(function (t, i) { var on = p.trim() === t; return '<button type="button" class="pk' + (on ? ' on' : '') + '" data-act="idea" data-i="' + i + '" aria-pressed="' + on + '">' + t + '</button>'; }).join('') + '<button type="button" class="pk' + (/^\s*@/.test(p) ? ' on' : '') + '" data-act="twin">@handle twin</button></div>';
     var stepN = (st.mintOpen || st.flow) ? 3 : ((m.born || m.hatching || st.face === 'back' || hn.length) ? 2 : 1);
     var stEls = document.querySelectorAll('#inSteps span'); for (var si = 0; si < stEls.length; si++) stEls[si].className = si < stepN ? 'on' : '';
     setHTML('heroDyn', hd);
@@ -632,7 +643,7 @@
     var m = model();
     if (st.readonly && b.closest('#device') && /^(preset|watch|skill|conn|addx|rmx|knob|load|eject)$/.test(a)) return;
     if (a === 'hatch') startHatch(prompt() || currentExample());
-    else if (a === 'idea') startHatch(IDEAS[+b.getAttribute('data-i')]);
+    else if (a === 'idea') typeInto(IDEAS[+b.getAttribute('data-i')]);
     else if (a === 'twin') { $('prompt').value = '@degen_intern'; $('prompt').focus(); render(); }
     else if (a === 'ask') set({ askOpen: true });
     else if (a === 'tg') location.hash = '#/me';
@@ -1040,7 +1051,7 @@
     setInterval(function () {
       if (st.phase === 'hatching') {
         var b = (st.btick || 0) + 1;
-        if (b >= 28) { st.phase = 'born'; st.btick = 0; st.tick = 999; if (st.flipAfterBuild) { st.flipAfterBuild = false; st.mode = 'EQ'; setTimeout(function () { flip('back'); }, 350); } } else { st.btick = b; }
+        if (b >= 16) { st.phase = 'born'; st.btick = 0; st.tick = 999; if (st.flipAfterBuild) { st.flipAfterBuild = false; st.mode = 'EQ'; setTimeout(function () { if (st.face !== 'back') flip('back'); }, 1000); } } else { st.btick = b; }
       } else if (st.phase === 'born') {
         st.tick++;
       } else if (st.sim) st.tick++;

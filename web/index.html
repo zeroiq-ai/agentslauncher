@@ -247,6 +247,11 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .preset-row .pk:hover{color:#111;border-color:#111}
 .dv.sim .dv-screen{filter:grayscale(1) contrast(1.08)}
 .dv.sim .scr-top span:first-child{color:#fff}
+.inp-presets{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.inp-presets::-webkit-scrollbar{display:none}
+.inp-presets .pk{flex:0 0 auto;white-space:nowrap}
+.pk.on{background:#c6f432;color:#0d130a;border-color:#c6f432}
+#cables .boot{fill:#17181b;stroke:#0b0c0e;stroke-width:1;rx:3}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
@@ -292,7 +297,7 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 
 <main id="top" class="wrap"><div id="pgHome">
 <section id="heroSec" style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:40px 0 130px;overflow-x:clip;overflow-y:visible;position:relative">
-<svg id="cables" aria-hidden="true"><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#b9e63a"/><path id="cAt" class="ct"/><path id="cAh" class="ch"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#f2782a"/><path id="cBt" class="ct"/><path id="cBh" class="ch"/></svg>
+<svg id="cables" aria-hidden="true"><rect id="bA1" class="boot"/><rect id="bA2" class="boot"/><rect id="bB1" class="boot"/><rect id="bB2" class="boot"/><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#b9e63a"/><path id="cAt" class="ct"/><path id="cAh" class="ch"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#f2782a"/><path id="cBt" class="ct"/><path id="cBh" class="ch"/><rect id="bA1t" class="boot"/><rect id="bA2t" class="boot"/><rect id="bB1t" class="boot"/><rect id="bB2t" class="boot"/></svg>
 <div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px;position:relative;z-index:2">
 <span class="eyebrow">AI trading league · Robinhood Chain stock tokens</span>
 <h1 style="margin:0;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-size:clamp(44px,5.6vw,72px)">Raise an AI trader.</h1>
@@ -305,15 +310,15 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 <textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm"></textarea>
 <div class="inp-name"><label for="agentName" class="inp-lbl">NAME ▸</label><input id="agentName" maxlength="24" autocomplete="off"><span>EDITABLE UNTIL MINT</span></div>
 </div>
+<div id="heroDyn" style="display:flex;flex-direction:column;gap:6px"></div>
 <div style="display:flex;flex-direction:column;gap:8px"><button type="button" class="hot-h" id="hotHead" data-act="hottog" aria-expanded="false" aria-controls="skills"></button><div id="skills" class="inp-hot" role="group" aria-label="Hot options" hidden></div></div>
-<div id="heroDyn" style="display:flex;flex-direction:column;gap:8px"></div>
 <div class="inp-foot"><span class="dv-eng" style="text-align:left">FREE TO SET UP · MINT 0.001 ETH</span><button type="button" class="dv-key lime inp-go" data-act="hatch" id="hatchBtn">SET UP ▶</button></div>
 <div class="inp-jacks" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div>
 </div>
 </div>
 <div id="heroDevCol" style="flex:1 1 420px;min-width:0;display:flex;justify-content:center;position:relative">
 <div class="ghost g1" aria-hidden="true"></div><div class="ghost g2" aria-hidden="true"></div>
-<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="device" class="dv"></div><div class="dv-port" id="dvPort" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div><div id="presetRow" class="preset-row"></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
+<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="device" class="dv"></div><div class="dv-port" id="dvPort" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
 </div>
 </section>
 
@@ -437,6 +442,6 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Try your AI trader</a></div>
 
-<script src="app.js?v=19"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>
