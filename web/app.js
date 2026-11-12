@@ -490,6 +490,7 @@
     var swap = function () { st.face = to; buildFace(); if (to === 'back') renderBack(); else render(); drawCables(); };
     if (reduce) { swap(); return; }
     var dg = to === 'back' ? 90 : -90;
+    followCables(560);
     el.style.transition = 'transform .25s ease-in';
     el.style.transform = 'perspective(1400px) rotateY(' + dg + 'deg)';
     if (port) { port.style.transition = el.style.transition; port.style.transform = 'perspective(600px) rotateY(' + dg + 'deg)'; }
