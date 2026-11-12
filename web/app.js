@@ -493,7 +493,7 @@
     followCables(560);
     el.style.transition = 'transform .25s ease-in';
     el.style.transform = 'perspective(1400px) rotateY(' + dg + 'deg)';
-    if (port) { port.style.transition = el.style.transition; port.style.transform = 'perspective(600px) rotateY(' + dg + 'deg)'; }
+    if (port) { port.style.transition = el.style.transition; port.style.transform = 'perspective(1400px) rotateY(' + dg + 'deg)'; }
     setTimeout(function () {
       swap();
       el.style.transition = 'none';
@@ -501,7 +501,7 @@
       void el.offsetWidth;
       el.style.transition = 'transform .25s ease-out';
       el.style.transform = 'perspective(1400px) rotateY(0deg)';
-      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(600px) rotateY(' + (-dg) + 'deg)'; void port.offsetWidth; port.style.transition = 'transform .25s ease-out'; port.style.transform = 'perspective(600px) rotateY(0deg)'; }
+      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(1400px) rotateY(' + (-dg) + 'deg)'; void port.offsetWidth; port.style.transition = 'transform .25s ease-out'; port.style.transform = 'perspective(1400px) rotateY(0deg)'; }
     }, 250);
   }
 
