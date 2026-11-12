@@ -214,7 +214,7 @@
     var watch = Object.keys(st.tune.watch).filter(function (t) { return st.tune.watch[t]; });
     return (d.style === 'momentum' ? 'BUY after ' + k.momN + ' green candle' + (k.momN > 1 ? 's' : '') : 'BUY after ' + k.dipN + ' red candle' + (k.dipN > 1 ? 's' : '')) + ' · size ' + Math.round(k.size * 100) + '% of cash\n' +
       'SELL at +' + ((k.tp - 1) * 100).toFixed(1) + '% or −' + ((1 - k.sl) * 100).toFixed(1) + '% · hold ≥ ' + k.minHold + 'h\n' +
-      'stops for the day at −' + limit + '% · trades ' + (watch.length ? watch.join(' ') : 'nothing yet') + '\nskills: ' + skillNames().join(', ') + (st.md ? ' · playbook: ' + st.md.name : '');
+      'stops for the day at −' + limit + '% · trades ' + (watch.length ? watch.join(' ') : 'nothing yet') + '\nstyle: ' + (lean(d) >= 50 ? 'momentum ' + lean(d) : 'dip ' + (99 - lean(d))) + '% · skills: ' + skillNames().join(', ') + (st.md ? ' · playbook: ' + st.md.name : '');
   }
   var TUNE_PRESETS = { ZEN: { patience: 85, fomo: 10, risk: 25, freq: 25, style: 'dip' }, DIP: { patience: 65, fomo: 25, risk: 45, freq: 45, style: 'dip' }, MOMO: { patience: 30, fomo: 70, risk: 55, freq: 60, style: 'momentum' }, DEGEN: { patience: 10, fomo: 95, risk: 95, freq: 90, style: 'momentum' } };
   // ---------- device (2000s handheld, same size on both faces) ----------
@@ -226,7 +226,7 @@
     var g = ''; for (var i = 0; i < 12; i++) g += '<span></span>';
     var el = $('device');
     el.innerHTML = '<svg class="dv-noise" aria-hidden="true"><filter id="dvn"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#dvn)" opacity="0.6"/></svg><span class="dv-hl" aria-hidden="true"></span>' +
-      '<div class="dv-top"><div style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss">ZEROIQ</span><span class="dv-eng" id="dvModel">AGENT-01</span></div><div style="display:flex;align-items:center;gap:10px"><span class="dv-eng">PAPER</span><span class="dv-led" aria-hidden="true"></span><span class="dv-grille" aria-hidden="true">' + g + '</span></div></div>' +
+      '<div class="dv-top"><div style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss">ZEROIQ</span><span class="dv-eng" id="dvModel">AGENT-01</span></div><div style="display:flex;align-items:center;gap:10px"><button type="button" class="dv-snd' + (snd.on ? '' : ' off') + '" data-act="sound" aria-pressed="' + snd.on + '" aria-label="Button sounds">SND</button><span class="dv-eng">PAPER</span><span class="dv-led" aria-hidden="true"></span><span class="dv-grille" aria-hidden="true">' + g + '</span></div></div>' +
       '<div id="dvFace" class="dv-face"></div>' +
       '<div class="dv-foot"><span class="dv-screw" aria-hidden="true"></span><span class="dv-eng" id="dvFoot" style="color:#6d7079;font-weight:600"></span><span class="dv-screw" aria-hidden="true"></span></div>';
     el._h = null; buildFace();
@@ -307,6 +307,23 @@
       [0, 1, 2, 3, 4, 5].map(function (i) { return '<span class="dv-tick" style="top:' + (6 + i * 22) + 'px"></span>'; }).join('') +
       '<span class="dv-cap" id="cap-' + key + '" style="top:' + top + 'px;border-top-color:' + color + '"></span><input type="range" min="' + min + '" max="' + max + '" value="' + val + '" ' + attr + '="' + key + '" aria-label="' + label + '"></div><span class="dv-eng">' + label + '</span></div>';
   }
+  function lean(d) { return st.tune.lean === undefined ? (d.style === 'momentum' ? 75 : 25) : st.tune.lean; }
+  function knobDeg(v) { return Math.round(-135 + v / 99 * 270); }
+  function knobLabel(v) { return 'DIP ◂ ' + ('0' + v).slice(-2) + ' ▸ MOMO'; }
+  function knobText(v) { return v < 50 ? 'dip buyer, ' + (99 - v) + '% dip' : 'momentum, ' + v + '% momentum'; }
+  function setLean(v, quiet) {
+    v = Math.max(0, Math.min(99, Math.round(v)));
+    var old = st.tune.lean === undefined ? lean(model().dna) : st.tune.lean;
+    if (v === old) return;
+    if (!quiet && Math.floor(v / 4) !== Math.floor(old / 4)) sfx('tick');
+    st.tune.lean = v; st.preset = null;
+    st.dnaPatch = Object.assign({}, st.dnaPatch || {}, { style: v >= 50 ? 'momentum' : 'dip' });
+    var k = $('dvKnob'); if (k) { k.style.transform = 'rotate(' + knobDeg(v) + 'deg)'; k.setAttribute('aria-valuenow', v); k.setAttribute('aria-valuetext', knobText(v)); }
+    var l = $('dvKnobL'); if (l) l.textContent = knobLabel(v);
+    var pr = $('tv-preset'); if (pr) pr.textContent = 'PRESET: CUSTOM';
+    document.querySelectorAll('#device [data-act=preset].on').forEach(function (x) { x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); });
+    var rp = $('rulesPreview'); if (rp) rp.textContent = rulesText(model().dna, st.tune.limit);
+  }
   function panelHTML(m) {
     var d = m.dna, t = st.tune, mode = st.mode || 'EQ', p = '';
     if (st.mintOpen) return mintOv(m);
@@ -315,7 +332,8 @@
       p += '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 4px">' + fader('patience', 'PAT', d.patience, 0, 99, '#c6f432', 'data-dna') + fader('fomo', 'FOMO', d.fomo, 0, 99, '#c6f432', 'data-dna') + fader('risk', 'RISK', d.risk, 0, 99, '#c6f432', 'data-dna') + fader('freq', 'ACT', d.freq, 0, 99, '#c6f432', 'data-dna') + fader('limit', 'LOSS', t.limit, 3, 20, '#ff7a6b', 'data-tune') + '</div>';
       var momo = d.style === 'momentum';
       p += '<div style="display:flex;align-items:center;gap:14px"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;flex:1 1 auto">' + ['ZEN', 'DIP', 'MOMO', 'DEGEN'].map(function (z) { return '<button type="button" class="dv-key dv-sm' + (st.preset === z ? ' on' : '') + '" data-act="preset" data-p="' + z + '" aria-pressed="' + (st.preset === z) + '">' + z + '</button>'; }).join('') + '</div>';
-      p += '<div class="dv-kc"><button type="button" class="dv-knob" data-act="knob" style="transform:rotate(' + (momo ? 80 : -80) + 'deg)" aria-label="Style: ' + (momo ? 'momentum' : 'dip buyer') + '. Press to switch"><span></span></button><span class="dv-eng">DIP ◂ ▸ MOMO</span></div></div>';
+      var ln = lean(d);
+      p += '<div class="dv-kc"><div class="dv-knobwrap"><span class="dv-kring" aria-hidden="true"></span><div class="dv-knob" id="dvKnob" role="slider" tabindex="0" aria-label="Trading style, dip buyer to momentum" aria-valuemin="0" aria-valuemax="99" aria-valuenow="' + ln + '" aria-valuetext="' + knobText(ln) + '" style="transform:rotate(' + knobDeg(ln) + 'deg)"><span></span></div></div><span class="dv-eng" id="dvKnobL">' + knobLabel(ln) + '</span></div></div>';
     } else if (mode === 'MARKETS') {
       p += '<span class="dv-eng">WATCHLIST</span><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">' + Object.keys(t.watch).map(function (k) { var on = t.watch[k]; return '<div class="dv-kc" style="gap:4px"><span class="dv-ledk' + (on ? ' on' : '') + '"></span><button type="button" class="dv-key dv-sm dv-full' + (on ? ' on' : '') + '" data-act="watch" data-t="' + k + '" aria-pressed="' + on + '">' + k + '</button></div>'; }).join('') + '</div>';
       p += '<span class="dv-eng">ONCHAIN SKILLS</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' + SKILLS.map(function (k) { var on = !!st.skills[k[0]]; return '<button type="button" class="dv-key dv-sm' + (on ? ' on' : '') + '" data-act="skill" data-k="' + k[0] + '" aria-pressed="' + on + '" title="' + k[2] + '"><span class="dv-ledk' + (on ? ' on' : '') + '"></span>' + SK_SHORT[k[0]] + '</button>'; }).join('') + '</div>';
@@ -470,6 +488,60 @@
     el.placeholder = full.slice(0, ex.n) + caret;
     setTimeout(typeTick, delay);
   }
+  // ---------- sound (synthesized, no files) ----------
+  var snd = { on: true, ctx: null };
+  try { snd.on = localStorage.getItem('zq-sound') !== 'off'; } catch (e) {}
+  function ac() { if (!snd.ctx) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; snd.ctx = new C(); } if (snd.ctx.state === 'suspended') snd.ctx.resume(); return snd.ctx; }
+  function tone(c, t0, f, f2, dur, type, vol) {
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function noise(c, t0, dur, vol, hp) {
+    var n = Math.floor(c.sampleRate * dur), b = c.createBuffer(1, n, c.sampleRate), x = b.getChannelData(0);
+    for (var i = 0; i < n; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    var s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    f.type = 'highpass'; f.frequency.value = hp || 1800; g.gain.value = vol;
+    s.buffer = b; s.connect(f); f.connect(g); g.connect(c.destination); s.start(t0);
+  }
+  function sfx(kind) {
+    if (!snd.on) return; var c = ac(); if (!c) return; var t = c.currentTime + 0.005;
+    if (kind === 'tick') { noise(c, t, 0.012, 0.25, 3500); }
+    else if (kind === 'key') { noise(c, t, 0.03, 0.35, 1500); tone(c, t, 220, 120, 0.05, 'triangle', 0.12); }
+    else if (kind === 'switch') { noise(c, t, 0.02, 0.4, 2500); noise(c, t + 0.035, 0.015, 0.25, 2500); }
+    else if (kind === 'mint') { noise(c, t, 0.03, 0.3, 1500); tone(c, t + 0.02, 660, 0, 0.12, 'square', 0.05); tone(c, t + 0.11, 990, 0, 0.18, 'square', 0.05); }
+    else if (kind === 'flip') { noise(c, t, 0.22, 0.18, 600); tone(c, t, 180, 420, 0.2, 'sine', 0.06); }
+    else if (kind === 'beep') { tone(c, t, 1320, 0, 0.06, 'square', 0.04); }
+  }
+  function sfxFor(el, a) {
+    if (a === 'mint' || a === 'join') return 'mint';
+    if (a === 'flip' || a === 'simulate') return 'flip';
+    if (a === 'conn' || a === 'mode' || a === 'watch' || a === 'skill') return 'switch';
+    if (el.closest('.dv-screen') || el.classList.contains('scr-btn')) return 'beep';
+    return 'key';
+  }
+  document.addEventListener('pointerdown', function (e) {
+    var b = e.target.closest && e.target.closest('[data-act]');
+    if (b && !b.disabled && b.getAttribute('aria-disabled') !== 'true') sfx(sfxFor(b, b.getAttribute('data-act')));
+    var k = e.target.closest && e.target.closest('#dvKnob'); if (!k) return;
+    e.preventDefault(); k.focus(); sfx('key');
+    var y0 = e.clientY, x0 = e.clientX, v0 = st.tune.lean === undefined ? lean(model().dna) : st.tune.lean;
+    try { k.setPointerCapture(e.pointerId); } catch (er) {}
+    var mv = function (ev) { setLean(v0 + ((y0 - ev.clientY) + (ev.clientX - x0)) * 0.6); };
+    var up = function () { k.removeEventListener('pointermove', mv); k.removeEventListener('pointerup', up); k.removeEventListener('pointercancel', up); };
+    k.addEventListener('pointermove', mv); k.addEventListener('pointerup', up); k.addEventListener('pointercancel', up);
+  });
+  document.addEventListener('wheel', function (e) {
+    var k = e.target.closest && e.target.closest('#dvKnob'); if (!k) return;
+    e.preventDefault(); setLean((st.tune.lean === undefined ? lean(model().dna) : st.tune.lean) + (e.deltaY < 0 ? 3 : -3));
+  }, { passive: false });
+  document.addEventListener('keydown', function (e) {
+    if (!e.target || e.target.id !== 'dvKnob') return;
+    var v = st.tune.lean === undefined ? lean(model().dna) : st.tune.lean, step = { ArrowUp: 3, ArrowRight: 3, ArrowDown: -3, ArrowLeft: -3, PageUp: 10, PageDown: -10 }[e.key];
+    if (e.key === 'Home') step = -v; if (e.key === 'End') step = 99 - v;
+    if (step === undefined) return; e.preventDefault(); setLean(v + step);
+  });
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]');
     if (!b) return;
@@ -484,9 +556,9 @@
     else if (a === 'hold') set({ answered: 'hold', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { patience: Math.min(99, m.dna.patience + 5) }) });
     else if (a === 'sell') set({ answered: 'sell', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { risk: Math.max(0, m.dna.risk - 10) }) });
     else if (a === 'share') { if (!m.born) return; set({ shareOpen: !st.shareOpen, mintOpen: false, saveOpen: false }); }
+    else if (a === 'sound') { snd.on = !snd.on; try { localStorage.setItem('zq-sound', snd.on ? 'on' : 'off'); } catch (er) {} b.setAttribute('aria-pressed', snd.on); b.classList.toggle('off', !snd.on); if (snd.on) sfx('beep'); }
     else if (a === 'closeov') { st.mintOpen = false; st.shareOpen = false; st.saveOpen = false; refresh(); }
     else if (a === 'mode') { st.mode = b.getAttribute('data-m'); st.mintOpen = false; renderBack(); }
-    else if (a === 'knob') { st.preset = null; st.dnaPatch = Object.assign({}, st.dnaPatch || {}, { style: m.dna.style === 'momentum' ? 'dip' : 'momentum' }); renderBack(); }
     else if (a === 'load') { var fi = $('mdFile'); if (fi) fi.click(); }
     else if (a === 'eject') { st.md = null; $('mdFile').value = ''; renderBack(); }
     else if (a === 'replay') set({ rtick: st.tick, mintOpen: false, shareOpen: false, saveOpen: false });
@@ -499,7 +571,7 @@
     else if (a === 'skill') { var sk = b.getAttribute('data-k'), cnt = Object.keys(st.skills).filter(function (x) { return st.skills[x]; }).length; if (st.skills[sk] && cnt === 1) return; st.skills[sk] = !st.skills[sk]; render(); if (st.face === 'back') renderBack(); }
     else if (a === 'flip') flip(st.face === 'back' ? 'front' : 'back');
     else if (a === 'mint') { st.mintOpen = !st.mintOpen; st.shareOpen = false; st.saveOpen = false; refresh(); }
-    else if (a === 'preset') { var pz = b.getAttribute('data-p'); st.preset = pz; st.dnaPatch = Object.assign({}, st.dnaPatch || {}, TUNE_PRESETS[pz]); renderBack(); }
+    else if (a === 'preset') { var pz = b.getAttribute('data-p'); st.preset = pz; st.dnaPatch = Object.assign({}, st.dnaPatch || {}, TUNE_PRESETS[pz]); st.tune.lean = { ZEN: 10, DIP: 30, MOMO: 75, DEGEN: 95 }[pz]; renderBack(); }
     else if (a === 'watch') { var tk = b.getAttribute('data-t'); st.tune.watch[tk] = !st.tune.watch[tk]; renderBack(); }
     else if (a === 'conn') { var cn = b.getAttribute('data-c'); st.tune.conn[cn] = !st.tune.conn[cn]; renderBack(); }
     else if (a === 'addx') addHandle();
