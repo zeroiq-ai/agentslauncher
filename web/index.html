@@ -140,6 +140,63 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .lb-row{display:grid;grid-template-columns:28px minmax(170px,1.6fr) 110px 80px 70px 56px 70px 104px 64px;gap:10px;align-items:center;padding:10px 0;min-width:0}
 @media (max-width:720px){.lb-row{grid-template-columns:22px minmax(0,1fr) 64px 44px 60px}}
 @media (min-width:721px){.hide-lg{display:none}}
+.t1{--shell:linear-gradient(160deg,#dcff74 0%,#b9e22a 55%,#8fb81e 100%);--eng:#3d4f0b;--emb:#a2c91e}
+.t2{--shell:linear-gradient(160deg,#fbfbf8 0%,#e4e4de 55%,#c8c8c1 100%);--eng:#77776f;--emb:#cfcfc8}
+.t3{--shell:linear-gradient(160deg,#3d6eac 0%,#26497d 55%,#172f54 100%);--eng:#a9c2e4;--emb:#1b3762}
+.t4{--shell:linear-gradient(160deg,#8f6240 0%,#634026 55%,#3f2815 100%);--eng:#e0c09c;--emb:#3a2312}
+.t5{--shell:linear-gradient(160deg,#f5afcd 0%,#dc77a5 55%,#b4507e 100%);--eng:#6e1f43;--emb:#c9608f}
+.t6{--shell:linear-gradient(160deg,#ffae63 0%,#f28426 55%,#c25d0e 100%);--eng:#6a2e05;--emb:#d86b12}
+.t7{--shell:linear-gradient(160deg,rgba(96,100,116,.94) 0%,rgba(52,55,64,.96) 55%,rgba(30,32,38,.97) 100%);--eng:#a3a7b1;--emb:#262830}
+.dv.t1,.dv.t2,.dv.t3,.dv.t4,.dv.t5,.dv.t6,.dv.t7{background:var(--shell)}
+.t1 .dv-eng,.t2 .dv-eng,.t3 .dv-eng,.t4 .dv-eng,.t5 .dv-eng,.t6 .dv-eng,.t7 .dv-eng{color:var(--eng);text-shadow:none}
+.t1 .dv-emboss,.t2 .dv-emboss,.t3 .dv-emboss,.t4 .dv-emboss,.t5 .dv-emboss,.t6 .dv-emboss,.t7 .dv-emboss{color:var(--emb);text-shadow:0 1px 0 rgba(255,255,255,.35),0 -1px 0 rgba(0,0,0,.25)}
+.scr-chart{flex:1 1 auto;min-height:150px;display:flex;flex-direction:column;gap:4px}
+.scr-ch-head{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:.08em;color:#7d9a2a}
+.scr-tf{display:flex;gap:3px;align-items:center}
+.scr-tf button{font:700 9px 'JetBrains Mono',monospace;background:transparent;border:1px solid #2f3d12;color:#7d9a2a;padding:2px 5px;border-radius:3px;cursor:pointer;min-height:20px}
+.scr-tf button.on{background:#c6f432;color:#0d130a;border-color:#c6f432}
+.scr-tf button:disabled{opacity:.45;cursor:not-allowed}
+.scr-src{margin-left:4px;color:#4d5f1c}
+.scr-ch-body{position:relative;flex:1 1 auto;min-height:100px;margin-right:38px;border-left:1px solid #1f2a0c;border-bottom:1px solid #1f2a0c}
+.scr-ch-body svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scr-yl{position:absolute;right:-38px;width:36px;text-align:right;font-size:8px;color:#6f8a22;transform:translateY(-50%)}
+.scr-yl[style*="top:0"]{transform:none}.scr-yl[style*="bottom:0"]{transform:none}
+.scr-ch-x{display:flex;justify-content:space-between;margin-right:38px;font-size:8px;color:#6f8a22}
+.scr-ch-leg{display:flex;gap:10px;flex-wrap:wrap;font-size:8px;color:#6f8a22;align-items:center}
+.scr-ch-leg i{display:inline-block;width:10px;height:3px;margin-right:4px;vertical-align:middle}
+.scr-mk{position:absolute;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:2px;display:inline-flex;align-items:center;justify-content:center;font:800 8px 'JetBrains Mono',monospace;z-index:1}
+.scr-mk.b{background:#c6f432;color:#0d130a}.scr-mk.s{background:#ff7a6b;color:#1a0d0a}
+.scr-dot{position:absolute;width:7px;height:7px;border-radius:50%;background:#d9ff5c;transform:translate(-50%,-50%);box-shadow:0 0 0 3px rgba(198,244,50,.25);animation:dvblink 1.6s infinite}
+.scr-ov.pager{border-color:#c6f432;gap:10px}
+.pg-h{font-size:10px;font-weight:700;letter-spacing:.1em;color:#c6f432}
+.scr-ov .pg-h{display:flex;justify-content:space-between}
+.pg-btns{display:flex;gap:8px}
+.pg-b{flex:1 1 0;min-height:38px;font:800 22px 'JetBrains Mono',monospace;border-radius:4px;cursor:pointer;line-height:1}
+.pg-b.yes{background:#c6f432;color:#0d130a;border:0}.pg-b.no{background:transparent;color:#9fbf3a;border:1px solid #7d9a2a}
+.pg-b:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.ghost{position:absolute;top:44px;left:50%;width:336px;height:592px;pointer-events:none;z-index:0}
+.ghost .dv{width:420px;max-width:none;transform:scale(.8);transform-origin:0 0;box-shadow:0 20px 40px rgba(0,0,0,.18)}
+.ghost.g1{transform:translateX(-108%) rotate(-8deg);opacity:.6}
+.ghost.g2{transform:translateX(10%) rotate(7deg);opacity:.65}
+@media (max-width:760px){.ghost{width:262px;height:462px;top:70px}.ghost .dv{transform:scale(.62)}.ghost.g1{transform:translateX(-100%) rotate(-8deg)}.ghost.g2{transform:translateX(0) rotate(7deg)}}
+.dvm{border-radius:24px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--shell,linear-gradient(160deg,#3b3e45 0%,#2a2c31 55%,#202226 100%));box-shadow:inset 0 2px 0 rgba(255,255,255,.14),inset 0 -3px 0 rgba(0,0,0,.4),0 14px 28px rgba(0,0,0,.16)}
+.dvm-top{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
+.dvm-scr{border:6px solid #111215;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;font-family:'JetBrains Mono',monospace;background:repeating-linear-gradient(180deg,rgba(198,244,50,.035) 0 1px,transparent 1px 3px),radial-gradient(120% 90% at 50% 30%,#17220b 0%,#0d130a 70%)}
+.dvm-keys{display:flex;gap:8px}
+.dvm-keys .dv-key{flex:1 1 0;height:40px;border-radius:20px;font:800 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-decoration:none}
+.stp-lcd{flex:1 1 auto;min-width:0;border:6px solid #2a2c31;border-radius:12px;padding:10px;font:500 11px/1.45 'JetBrains Mono',monospace;color:#d9ff5c;display:flex;flex-direction:column;gap:5px;min-height:100px;box-sizing:border-box;background:repeating-linear-gradient(180deg,rgba(198,244,50,.035) 0 1px,transparent 1px 3px),radial-gradient(120% 90% at 50% 30%,#17220b 0%,#0d130a 70%)}
+.stp-lcd .dim{color:#6f8a22}
+.blink{animation:dvblink 1s infinite;font-weight:400}
+.pg-mini{flex:1;text-align:center;border:1px solid #7d9a2a;border-radius:3px;font-size:14px;color:#9fbf3a}.pg-mini.yes{background:#c6f432;color:#0d130a;border-color:#c6f432}
+.tgchat{background:#dfe6ee;border-radius:18px;width:100%;max-width:440px;padding:16px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.45}
+.tg-out{align-self:flex-end;background:#d9fdd3;border-radius:12px 12px 2px 12px;padding:8px 12px}
+.tg-msg{align-self:flex-start;background:#fff;border-radius:12px 12px 12px 2px;padding:9px 12px;max-width:85%}
+.pgw{align-self:flex-start;width:88%;border-radius:14px;padding:8px;background:var(--shell,linear-gradient(160deg,#3b3e45,#24262b));box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 2px 6px rgba(0,0,0,.15)}
+.pg-lcd{border-radius:7px;padding:10px 12px;font-family:'JetBrains Mono',monospace;color:#d9ff5c;background:repeating-linear-gradient(180deg,rgba(198,244,50,.04) 0 1px,transparent 1px 3px),#0d130a}
+.pg-lcd .pg-h{display:flex;justify-content:space-between}
+.pg-lcd p{margin:6px 0 0;font-size:13px;line-height:1.45}
+.tg-kb{display:flex;gap:6px;width:88%}
+.tg-kb span{flex:1;text-align:center;background:rgba(255,255,255,.75);border-radius:10px;padding:7px;font-weight:600;color:#2b5278}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
@@ -184,16 +241,17 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </header>
 
 <main id="top" class="wrap"><div id="pgHome">
-<section style="display:flex;flex-wrap:wrap;gap:48px;align-items:center;padding:40px 0 24px">
-<div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px">
+<section style="display:flex;flex-wrap:wrap;gap:48px;align-items:center;padding:40px 0 24px;overflow-x:clip;overflow-y:visible">
+<div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px;position:relative;z-index:2">
 <span class="eyebrow">AI trading league · Robinhood Chain stock tokens</span>
 <h1 style="margin:0;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-size:clamp(44px,5.6vw,72px)">Raise an AI trader.</h1>
 <span class="doto" style="align-self:flex-start;font-size:22px;letter-spacing:1px;background:#111;color:#c6f432;padding:6px 12px;border-radius:8px">ZERO IQ REQUIRED</span>
 <p class="lead" style="max-width:500px">Describe its personality in one sentence. Or tune it by hand. Press Try it and watch it trade last week. Mint it and it trades for you, or copy any agent from the leaderboard. Make as many as you want.</p>
 <div style="display:flex;align-items:center;gap:20px"><span class="eyebrow">Built on</span><img src="rhc-black.svg" alt="Robinhood Chain" style="height:22px;width:auto;display:block"></div>
-<div style="border:1.5px solid #111;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px">
+<div style="border:1.5px solid #111;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;background:#fff">
 <label for="prompt" class="eyebrow shimmer">Describe its personality</label>
 <textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm" style="font:500 17px Inter,sans-serif;line-height:1.4;border:0;outline:none;resize:none;padding:0;background:transparent;color:#111"></textarea>
+<div style="display:flex;align-items:center;gap:10px;border-top:1px solid #e5e5e2;padding-top:10px"><label for="agentName" class="eyebrow" style="flex:0 0 auto">Name</label><input id="agentName" maxlength="24" autocomplete="off" style="flex:1 1 auto;min-width:0;font:600 15px Inter,sans-serif;border:0;outline:none;background:transparent;color:#111;padding:6px 0"><span class="mono" style="font-size:11px;color:#6b6b6b;flex:0 0 auto">editable until mint</span></div>
 <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #e5e5e2;padding-top:12px">
 <span class="eyebrow" id="skillsLabel">Onchain skills · pick one or more</span>
 <div id="skills" role="group" aria-labelledby="skillsLabel" style="display:flex;flex-wrap:wrap;gap:6px"></div>
@@ -205,14 +263,14 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </div>
 <div id="heroDyn" style="display:flex;flex-direction:column;gap:12px"></div>
 </div>
-<div id="heroDevCol" style="flex:1 1 420px;min-width:0;display:flex;justify-content:center;position:relative;overflow-x:clip">
-<div class="ghost g1" aria-hidden="true"><div class="ghost-scr"><img id="ghostImg1" alt=""></div><div class="ghost-keys"><span></span><span></span><span></span><span class="l"></span></div></div><div class="ghost g2" aria-hidden="true"><div class="ghost-scr"><img id="ghostImg2" alt=""></div><div class="ghost-keys"><span></span><span></span><span></span><span class="l"></span></div></div>
+<div id="heroDevCol" style="flex:1 1 420px;min-width:0;display:flex;justify-content:center;position:relative">
+<div class="ghost g1" aria-hidden="true"></div><div class="ghost g2" aria-hidden="true"></div>
 <div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="device" class="dv"></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
 </div>
 </section>
 
 <section id="how" class="sec" style="border-top:0">
-<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">How it works</span><h2>Egg to trader in three steps</h2></div>
+<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">How it works</span><h2>Idea to trader in three steps</h2></div>
 <div id="steps" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))"></div>
 </section>
 
@@ -263,16 +321,19 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 <section id="telegram" class="sec" style="flex-direction:row;flex-wrap:wrap;gap:40px;align-items:center">
 <div style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px">
 <span class="eyebrow">Telegram</span>
-<h2>Your agents text you.</h2>
-<p class="lead" style="max-width:520px">Send /start to the ZeroIQ bot once and every agent on your account reports in: each trade, one question a day, a weekly score. Answer with a tap.</p>
+<h2>Your agents page you.</h2>
+<p class="lead" style="max-width:520px">Send /start to the ZeroIQ bot once and every agent on your account pages you: each trade, what it noticed, what it wants to try. Answer with plus or minus.</p>
 <div><a href="#/me" class="btn dark">Link Telegram in your dashboard</a></div>
 </div>
 <div style="flex:1 1 420px;min-width:0;display:flex;justify-content:center">
-<div style="background:#e7ebf0;border-radius:18px;width:100%;max-width:440px;padding:18px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.45">
-<div style="align-self:flex-end;background:#d9fdd3;border-radius:12px 12px 2px 12px;padding:8px 12px" class="mono">/start ZQ7F3K</div>
-<div style="align-self:flex-start;background:#fff;border-radius:12px 12px 12px 2px;padding:10px 12px;max-width:85%">Linked. 2 agents on this account: Zen Goblin, Degen Hamster.</div>
-<div style="align-self:flex-start;background:#fff;border-radius:12px 12px 12px 2px;padding:10px 12px;max-width:85%"><strong>Zen Goblin</strong> bought NVDA at $131.20 after 3 red candles. Size 38%.</div>
-<div style="align-self:flex-start;background:#fff;border-radius:12px 12px 12px 2px;padding:10px 12px;max-width:85%"><strong>Degen Hamster</strong>: NVDA reports tomorrow. Hold or sell before?<div style="display:flex;gap:6px;margin-top:8px"><span style="flex:1;text-align:center;background:#f1f5fb;border-radius:8px;padding:6px">Hold</span><span style="flex:1;text-align:center;background:#f1f5fb;border-radius:8px;padding:6px">Sell before</span></div></div>
+<div class="tgchat">
+<div class="tg-out mono">/start ZQ7F3K</div>
+<div class="tg-msg">Linked. 2 agents report here: Zen Goblin, Degen Hamster.</div>
+<div class="pgw"><div class="pg-lcd"><div class="pg-h"><span>✉ ZEN GOBLIN · EVENT</span><span>09:02</span></div><p>NVDA reports earnings tomorrow after the close. 6–8% moves are normal. Trade the move with half size?</p></div></div>
+<div class="tg-kb"><span>+  Yes</span><span>−  No</span></div>
+<div class="pgw t1"><div class="pg-lcd"><div class="pg-h"><span>✉ DEGEN HAMSTER · EVENT</span><span>11:40</span></div><p>$HOODIE passed a $1M cap on Robinhood Chain in 3 hours. Start trading memes, max 2% per trade?</p></div></div>
+<div class="tg-kb"><span>+  Yes</span><span>−  No</span></div>
+<div class="pgw"><div class="pg-lcd"><div class="pg-h"><span>✉ ZEN GOBLIN · TRADE</span><span>14:00</span></div><p>BOUGHT NVDA $131.20 · size 38% · after 3 red candles. Stop at −3.3%.</p></div></div>
 <span class="mono" style="font-size:11px;color:#6b6b6b;align-self:center">sample chat · bot opens with Season 0</span>
 </div>
 </div>
@@ -328,6 +389,6 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Try your AI trader</a></div>
 
-<script src="app.js?v=16"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
