@@ -942,7 +942,20 @@
         dna: dna, lean: dna.style === 'momentum' ? 72 : 28, conn: {}, handles: [], owner: fakeAddr(nm), xp: Math.min(110, Math.floor(rnd() * 90)), tint: Math.floor(rnd() * 8), mode: 'live', avg: st0.avg, dd: st0.dd, score: st0.score, all: st0.all, pub: true, isNew: rnd() < 0.12 });
     }
   })();
-  function findAgent(id) { id = +id; var a = null; ME.agents.forEach(function (x) { if (x.id === id) a = x; }); PUB.forEach(function (x) { if (x.id === id) a = x; }); return a; }
+  var REAL = null, REALA = [];
+  function findAgent(id) { id = +id; var a = null; ME.agents.forEach(function (x) { if (x.id === id) a = x; }); PUB.forEach(function (x) { if (x.id === id) a = x; }); REALA.forEach(function (x) { if (x.id === id) a = x; }); return a; }
+  function loadReal() {
+    try {
+      fetch('data/explorer.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (!d || !d.wallets || !d.wallets.length) return;
+        REAL = d;
+        REALA = d.wallets.map(function (x, i) { var h = hash(x.w), src = PUB[h % PUB.length], w = {}; x.stocks.forEach(function (t) { w[t] = true; });
+          return { id: 900001 + i, pub: true, real: x, name: 'Wallet ' + shortAddr(x.w), owner: x.w, prompt: x.w + ' ' + src.prompt, preset: src.preset, tint: src.tint, score: Math.max(1, Math.min(99, 50 + Math.max(-30, Math.min(30, x.r30)) + x.vs * 0.5)), dd: null, avg: x.r30 / 4.3, watch: w, copiers: 0 }; });
+        exType = 'trader'; exSort = 'r30'; exVer = true;
+        if (page === 'home') renderBoard(); else if (page === 'agent' || page === 'follow') route();
+      }).catch(function () {});
+    } catch (e) {}
+  }
   function isMine(a) { return a && !a.pub; }
 
   // load any agent into the one device on the page
@@ -1034,12 +1047,13 @@
   }
   // ---------- explorer metrics (sample until the live index opens) ----------
   function exm(a) {
+    if (a.real) { var x = a.real; return { type: x.type, bot: 'High frequency', label: a.name, r30: x.r30, bh: x.hold, vs: x.vs, trades: x.trades, cap: x.capital, age: x.days, verified: x.days >= 7, stocks: x.stocks.length ? x.stocks : ['NVDA'], followers: isFollowing(a.id) ? 1 : 0, real: true }; }
     var h = hash(a.name + a.id), mine = isMine(a);
     var r30 = (a.all && a.all.length ? (a.all[a.all.length - 1] - 1) * 100 : a.avg * 4.3) * 0.35;
     var vs = ((h % 170) - 95) / 10 + r30 * 0.2, bh = r30 - vs;
     var age = mine ? Math.floor((Date.now() - (a.created || Date.now())) / 864e5) : 5 + (h >>> 4) % 160;
     var w = Object.keys(a.watch || {}).filter(function (k) { return a.watch[k]; });
-    var tk = h % 20, type = mine ? 'agent' : (tk < 13 ? 'agent' : (tk < 18 ? 'trader' : 'bot'));
+    var tk = h % 20, type = (mine || REAL) ? 'agent' : (tk < 13 ? 'agent' : (tk < 18 ? 'trader' : 'bot'));
     return { type: type, bot: tk === 18 ? 'Market maker' : 'Arbitrage', label: type === 'agent' ? a.name : (type === 'trader' ? 'Wallet ' : 'Bot ') + shortAddr(a.owner), r30: r30, bh: bh, vs: vs, trades: mine ? (model().trades.length) : 8 + (h >>> 7) % 140, cap: mine ? (a.vault || 0) : 200 + ((h >>> 9) % 480) * 100, age: age, verified: age >= 7, stocks: w.length ? w : ['NVDA'], followers: a.copiers || 0 };
   }
   function typeBadge(k) { var T = { agent: ['AGENT · 8004', '#111', '#c6f432'], trader: ['TRADER', '#fff', '#111'], bot: ['BOT · ' + k.bot.toUpperCase(), '#f1f1ee', '#4a4a4a'] }[k.type]; return '<span class="mono" style="font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 6px;border-radius:5px;border:1px solid #d4d4d0;background:' + T[1] + ';color:' + T[2] + '">' + T[0] + '</span>'; }
@@ -1123,7 +1137,7 @@
   function copyControls(c, scope) {
     return '<label style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font-size:14px"><span>Your loss limit per day</span><strong class="mono" id="cs-maxLoss-' + scope + '">−' + c.maxLoss + '%</strong></span><input type="range" min="3" max="20" value="' + c.maxLoss + '" data-copy="maxLoss" data-scope="' + scope + '" style="accent-color:#ff7a6b"></label>';
   }
-  function boardRows() { return PUB.concat(ME.agents.filter(function () { return !!ME.user; })).slice().sort(function (x, y) { return y.score - x.score; }); }
+  function boardRows() { return (REAL ? REALA.concat(PUB) : PUB).concat(ME.agents.filter(function () { return !!ME.user; })).slice().sort(function (x, y) { return y.score - x.score; }); }
   var boardFilter = 'all', boardQuery = '', boardLimit = 25, exStock = 'all', exSort = 'score', exVer = false, exHideBots = true, exType = 'all';
   function renderBoard() {
     var all = boardRows(), rank = {}; all.forEach(function (a, i) { rank[a.id] = i + 1; });
@@ -1144,11 +1158,11 @@
       '<button type="button" role="switch" aria-checked="' + exHideBots + '" data-act="exbots" class="btn sm" style="' + (exHideBots ? 'background:#f6ffd9;border-color:#111' : '') + '" title="Market makers and arbitrage bots earn from spreads, not from picking stocks">' + (exHideBots ? '✓ ' : '') + 'Hide bots</button>' + '<button type="button" role="switch" aria-checked="' + exVer + '" data-act="exver" class="btn sm" style="' + (exVer ? 'background:#f6ffd9;border-color:#111' : '') + '">' + (exVer ? '✓ ' : '') + 'Verified only</button></div>';
     h += '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="mono" style="font-size:11px;color:#4a4a4a;margin-right:4px">STOCK</span>' + ['all'].concat(WATCH0).map(function (t) { return chip('exstock', t, t === 'all' ? 'Any' : t, exStock === t); }).join('') + '<span class="mono" style="font-size:11px;color:#4a4a4a;margin:0 4px 0 12px">TYPE</span>' + [['all', 'All'], ['agent', 'Agents'], ['trader', 'Traders'], ['bot', 'Bots']].map(function (t) { return chip('extype', t[0], t[1], exType === t[0]); }).join('') + '<span class="mono" style="font-size:11px;color:#4a4a4a;margin:0 4px 0 12px">SORT</span>' + [['score', 'Score'], ['r30', '30d'], ['vs', 'vs hold'], ['followers', 'Followers']].map(function (t) { return chip('exsort', t[0], t[1], exSort === t[0]); }).join('') + '</div>';
     var c = function (v, d) { return '<span class="mono" style="text-align:right;color:' + (v >= 0 ? UP : DOWN) + '">' + (v >= 0 ? '+' : '') + v.toFixed(d === undefined ? 1 : d) + (d === undefined ? '%' : '') + '</span>'; };
-    h += '<div class="card" style="gap:0;padding:8px 16px;overflow-x:auto"><div class="mono ex-row" style="font-size:10px;letter-spacing:.06em;color:#4a4a4a;border-bottom:1px solid #e5e5e2"><span>#</span><span>AGENT</span><span style="text-align:right">30D</span><span style="text-align:right">VS HOLD</span><span style="text-align:right">MAX DD</span><span style="text-align:right">TRADES</span><span style="text-align:right">CAPITAL</span><span style="text-align:right">AGE</span><span></span></div>';
-    rows.forEach(function (a) {
+    h += '<div class="card" style="gap:0;padding:8px 16px;overflow-x:auto"><div class="mono ex-row" style="font-size:10px;letter-spacing:.06em;color:#4a4a4a;border-bottom:1px solid #e5e5e2"><span>#</span><span>AGENT</span><span style="text-align:right">30D</span><span style="text-align:right">VS HOLD</span><span style="text-align:right">MAX DD</span><span style="text-align:right">TRADES</span><span style="text-align:right">CAPITAL</span><span style="text-align:right">' + (REAL && exType === 'trader' ? 'ACTIVE' : 'AGE') + '</span><span></span></div>';
+    rows.forEach(function (a, ri) {
       var k = K[a.id], mine = isMine(a);
-      h += '<div class="ex-row" style="border-bottom:1px solid #f1f1ee;font-size:14px"><span class="mono" style="color:#4a4a4a">' + rank[a.id] + '</span><a href="#/agent/' + a.id + '" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#111;min-width:0"><img alt="" src="' + robot(a.prompt, { preset: a.preset, stage: 3, mood: k.r30 >= 0 ? 'happy' : 'sad' }) + '" style="width:36px;height:36px;background:#0f0f0f;border-radius:8px;flex:0 0 auto"><span style="display:flex;flex-direction:column;min-width:0"><strong style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(k.label) + (mine ? ' ' + badge('YOU', true) : '') + (k.verified ? ' <span title="7+ days of onchain history" style="color:' + UP + '">✓</span>' : ' ' + badge('NEW')) + '</strong><span class="mono" style="font-size:11px;color:#4a4a4a;display:flex;gap:6px;align-items:center">' + typeBadge(k) + k.stocks.slice(0, 3).join(' · ') + (k.type === 'agent' ? ' · #' + a.id : '') + '</span></span></a>' +
-        c(k.r30) + c(k.vs) + '<span class="mono" style="text-align:right;color:#4a4a4a">' + a.dd.toFixed(1) + '%</span><span class="mono" style="text-align:right">' + k.trades + '</span><span class="mono" style="text-align:right">$' + k.cap.toLocaleString('en-US') + '</span><span class="mono" style="text-align:right;color:#4a4a4a">' + k.age + 'd</span><span style="display:flex;gap:6px;justify-content:flex-end">' + (mine ? '' : followBtn(a)) + '<a class="btn sm" href="#/agent/' + a.id + '">Open</a></span></div>';
+      h += '<div class="ex-row" style="border-bottom:1px solid #f1f1ee;font-size:14px"><span class="mono" style="color:#4a4a4a">' + (ri + 1) + '</span><a href="#/agent/' + a.id + '" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#111;min-width:0"><img alt="" src="' + robot(a.prompt, { preset: a.preset, stage: 3, mood: k.r30 >= 0 ? 'happy' : 'sad' }) + '" style="width:36px;height:36px;background:#0f0f0f;border-radius:8px;flex:0 0 auto"><span style="display:flex;flex-direction:column;min-width:0"><strong style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(k.label) + (mine ? ' ' + badge('YOU', true) : '') + (k.verified ? ' <span title="7+ days of onchain history" style="color:' + UP + '">✓</span>' : ' ' + badge(k.real ? 'UNDER 7 DAYS' : 'NEW')) + '</strong><span class="mono" style="font-size:11px;color:#4a4a4a;display:flex;gap:6px;align-items:center">' + typeBadge(k) + k.stocks.slice(0, 3).join(' · ') + (k.type === 'agent' ? ' · #' + a.id : '') + '</span></span></a>' +
+        c(k.r30) + c(k.vs) + '<span class="mono" style="text-align:right;color:#4a4a4a">' + (a.dd == null ? '—' : a.dd.toFixed(1) + '%') + '</span><span class="mono" style="text-align:right">' + k.trades + '</span><span class="mono" style="text-align:right">$' + k.cap.toLocaleString('en-US') + '</span><span class="mono" style="text-align:right;color:#4a4a4a">' + k.age + 'd</span><span style="display:flex;gap:6px;justify-content:flex-end">' + (mine ? '' : followBtn(a)) + '<a class="btn sm" href="#/agent/' + a.id + '">Open</a></span></div>';
     });
     h += '</div>';
     if (!total) h += '<span style="font-size:14px;color:#4a4a4a">No agents match. Try a name, a stock like NVDA, a number like 4256, or an owner address.</span>';
@@ -1156,8 +1170,11 @@
     setHTML('boardBody', h);
     var beat = all.filter(function (a) { return K[a.id].vs > 0; }).length;
     var nb = all.filter(function (a) { return K[a.id].type === 'bot'; }).length, nt = all.filter(function (a) { return K[a.id].type === 'trader'; }).length;
-    setHTML('exStats', (all.length - nb - nt) + ' agents · ' + nt + ' trader wallets · ' + nb + ' bots hidden by default · ' + beat + ' beat holding their stocks · sample data, the live Robinhood Chain index opens with Season 0');
+    if (REAL) { var rw = REALA.filter(function (a) { return a.real.type === 'trader'; }), rb = REALA.length - rw.length, beatR = rw.filter(function (a) { return a.real.vs > 0; }).length; setHTML('exStats', '<strong style="color:#111">Live data</strong> · ' + rw.length + ' real trader wallets on Robinhood Chain · ' + beatR + ' beat holding over ' + REAL.days + ' days · ' + rb + ' high-frequency bots hidden · updated ' + new Date(REAL.asOf * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC · agents are sample data until Season 0'); }
+    else setHTML('exStats', (all.length - nb - nt) + ' agents · ' + nt + ' trader wallets · ' + nb + ' bots hidden by default · ' + beat + ' beat holding their stocks · sample data, the live Robinhood Chain index opens with Season 0');
     var bc = $('boardCount'); if (bc) bc.textContent = total + ' shown';
+    if (REAL) { var hv = {}, tot = 0; REALA.forEach(function (a) { a.real.held.forEach(function (h) { hv[h[0]] = (hv[h[0]] || 0) + h[1]; tot += h[1]; }); }); var hk = Object.keys(hv).sort(function (x, y) { return hv[y] - hv[x]; }).slice(0, 6);
+      setHTML('holdNow', '<div class="card" style="gap:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="eyebrow">What these wallets hold now</span><span class="chip">live data</span></div>' + hk.map(function (t) { var pc = Math.round(hv[t] / Math.max(1, tot) * 100); return '<button type="button" data-act="exstock" data-v="' + t + '" style="all:unset;cursor:pointer;display:grid;grid-template-columns:64px 1fr 110px;gap:12px;align-items:center"><strong class="mono" style="font-size:14px">' + t + '</strong><span class="hbar"><span style="width:' + pc + '%"></span></span><span class="mono" style="font-size:13px;text-align:right">' + pc + '% · $' + Math.round(hv[t] / 1000) + 'K</span></button>'; }).join('') + '<span style="font-size:12px;color:#4a4a4a">Share of the stock-token value these wallets hold right now. Tap a stock to filter.</span></div>'); return; }
     var top = all.slice(0, 20), cnt = {}; top.forEach(function (a) { K[a.id].stocks.forEach(function (t) { cnt[t] = (cnt[t] || 0) + 1; }); });
     var hold = Object.keys(cnt).sort(function (x, y) { return cnt[y] - cnt[x]; }).slice(0, 6);
     setHTML('holdNow', '<div class="card" style="gap:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="eyebrow">What the top 20 agents hold now</span><span class="chip">sample data</span></div>' + hold.map(function (t) { var pc = Math.round(cnt[t] / top.length * 100); return '<button type="button" data-act="exstock" data-v="' + t + '" style="all:unset;cursor:pointer;display:grid;grid-template-columns:64px 1fr 48px;gap:12px;align-items:center"><strong class="mono" style="font-size:14px">' + t + '</strong><span class="hbar"><span style="width:' + pc + '%"></span></span><span class="mono" style="font-size:13px;text-align:right">' + pc + '%</span></button>'; }).join('') + '<span style="font-size:12px;color:#4a4a4a">Share of the top 20 agents by score that hold each stock token. Tap a stock to filter.</span></div>');
@@ -1169,6 +1186,17 @@
     var rank = boardRows().map(function (r) { return r.id; }).indexOf(a.id) + 1;
     var slot = $('agDevSlot'); if (slot) slot.style.display = k.type === 'agent' ? '' : 'none';
     var p = '<a href="#/" style="font-size:14px;color:#4a4a4a">← Explorer</a>';
+    if (a.real) {
+      var x = a.real, claimedR = ME.claims && ME.claims[a.id], bs = 'https://robinhoodchain.blockscout.com';
+      p += '<div style="display:flex;flex-direction:column;gap:8px"><span class="eyebrow">' + (x.type === 'bot' ? 'High-frequency bot' : 'Trader wallet') + ' · Robinhood Chain · live data</span><h2 style="margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap" class="mono">' + shortAddr(x.w) + ' ' + typeBadge(k) + '</h2><span class="mono" style="font-size:13px;color:#4a4a4a">' + x.trades + ' trades · active ' + x.days + ' of the last ' + REAL.days + ' days · last trade ' + ago(Date.now() - x.last * 1000) + ' ago · not registered as an agent</span></div>';
+      p += '<div style="display:flex;gap:8px;flex-wrap:wrap">' + followBtn(a, true) + '<a class="btn" target="_blank" rel="noopener" href="' + bs + '/address/' + x.w + '">Open on Blockscout ↗</a></div>';
+      p += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">' + kpi(REAL.days + ' DAYS', fmt(x.r30), x.r30 >= 0 ? UP : DOWN) + kpi('VS HOLD', (x.vs >= 0 ? '+' : '') + x.vs.toFixed(1) + '%', x.vs >= 0 ? UP : DOWN) + kpi('P&L', (x.pnl >= 0 ? '+$' : '−$') + Math.abs(x.pnl).toLocaleString('en-US'), x.pnl >= 0 ? UP : DOWN) + kpi('CAPITAL USED', '$' + x.capital.toLocaleString('en-US')) + kpi('VOLUME', '$' + x.volume.toLocaleString('en-US')) + '</div>';
+      p += '<div class="card" style="gap:10px"><span class="eyebrow">Holdings now</span>' + (x.held.length ? x.held.map(function (h) { return '<div style="display:flex;justify-content:space-between" class="mono"><strong>' + h[0] + '</strong><span>$' + h[1].toLocaleString('en-US') + '</span></div>'; }).join('') : '<span style="font-size:14px;color:#4a4a4a">No stock tokens right now. It sold everything it bought.</span>') + '</div>';
+      p += '<div class="card" style="gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Latest trades</span><span class="chip">onchain</span></div>' + x.recent.map(function (t) { return '<div class="mono" style="display:grid;grid-template-columns:110px 44px 56px 1fr 90px 44px;gap:8px;font-size:12px;border-bottom:1px solid #f1f1ee;padding:6px 0;align-items:center"><span style="color:#4a4a4a">' + new Date(t.t * 1000).toISOString().slice(5, 16).replace('T', ' ') + '</span><strong style="color:' + (t.side === 'buy' ? UP : DOWN) + '">' + t.side.toUpperCase() + '</strong><span>' + t.sym + '</span><span>' + t.qty + ' @ $' + t.px + (t.exact ? '' : '*') + '</span><span style="text-align:right">$' + Math.round(t.usd).toLocaleString('en-US') + '</span><a href="' + bs + '/tx/' + t.tx + '" target="_blank" rel="noopener" style="color:#4a4a4a;text-align:right" aria-label="Open transaction">tx ↗</a></div>'; }).join('') + '<span style="font-size:12px;color:#4a4a4a">' + x.exact + '% of trades are priced by what was actually paid in USDG or WETH. * = priced at the hourly close.</span></div>';
+      p += '<div class="card" style="gap:6px;background:#f7f7f5"><span class="eyebrow">How we count it</span><span style="font-size:13px;line-height:1.6;color:#2f2f2f">Return = profit, realised and unrealised, divided by the most capital it had in stock tokens at once. Vs hold = that return minus what it would have made by keeping every share it bought. Positions held before the window start at that day’s price.</span></div>';
+      p += '<div class="card" style="gap:12px;border:1.5px solid #111"><span class="eyebrow">Is this your wallet?</span>' + (claimedR ? '<span style="font-size:15px;line-height:1.5">Claimed in this preview. Next: register it as an ERC-8004 agent on Robinhood Chain and give it a name.</span>' + badge('CLAIMED · PREVIEW', true) : '<span style="font-size:15px;line-height:1.5;color:#2f2f2f">Claim it to add a name. Sign a message with this wallet, then register it as an ERC-8004 agent. Your record stays as it is.</span><div><button type="button" class="btn lime" data-act="claim" data-id="' + a.id + '">Claim this wallet</button></div><span style="font-size:12px;color:#4a4a4a">Preview: nothing is signed or sent.</span>') + '</div>';
+      setHTML('agInfo', p); return;
+    }
     if (k.type !== 'agent') {
       var claimed = ME.claims && ME.claims[a.id];
       p += '<div style="display:flex;flex-direction:column;gap:8px"><span class="eyebrow">' + (k.type === 'bot' ? 'Bot · ' + k.bot : 'Trader wallet') + ' · Robinhood Chain</span><h2 style="margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap" class="mono">' + shortAddr(a.owner) + ' ' + typeBadge(k) + '</h2><span class="mono" style="font-size:13px;color:#4a4a4a">' + k.followers + ' followers · ' + k.age + ' days of history · not registered as an agent</span></div>';
@@ -1308,6 +1336,7 @@
   setInterval(function () { if ((page === 'me' || page === 'agent') && !tokUI.open && !tokUI.deploying) { var a = findAgent(curId); if (a && a.token) renderTok(); } }, 4000);
 
   st.ctx = 'home';
+  loadReal();
   renderStatic();
   render();
   route();
