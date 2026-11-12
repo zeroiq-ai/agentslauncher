@@ -152,6 +152,9 @@
   var st = { tick: 999, phase: 'idle', btick: 0, face: 'front', skills: { spot: true }, tune: { limit: 10, watch: { NVDA: true, TSLA: false, AAPL: true, AMZN: false, PLTR: true, COIN: false }, conn: { news: false, top: false, x: false }, handles: [] } };
   function set(patch) { Object.keys(patch).forEach(function (k) { st[k] = patch[k]; }); render(); }
 
+  var SIM_TOTAL = 15000, SIM_SETUP = 3000;
+  function simElapsed() { return st.sim && st.simStart ? Date.now() - st.simStart : 0; }
+  function startSim() { if (st.sim) return; if (reduce) setTimeout(function () { st.sim = false; st.simStart = 0; refresh(); }, SIM_TOTAL); st.sim = true; st.simStart = Date.now(); st.dismissed = false; st.mintOpen = false; st.shareOpen = false; st.saveOpen = false; st.flow = null; }
   function prompt() { return $('prompt').value; }
   var typeTimer = null;
   function typeInto(text) {
@@ -178,6 +181,7 @@
     var px = prices(0), N = px.length;
     var rt = st.rtick === undefined ? st.tick : st.tick - st.rtick;
     var shown = Math.max(2, Math.min(N, Math.floor(rt / 1.2) + 2));
+    if (st.sim && st.simStart) { var se = Date.now() - st.simStart; shown = se < SIM_SETUP ? 2 : Math.min(N, 2 + Math.floor((se - SIM_SETUP) / (SIM_TOTAL - SIM_SETUP) * (N - 2))); }
     var sim = equity(px, dna, shown), done = shown >= N;
     var h = hash(subject);
     var ADJ = ['Tiny', 'Lucky', 'Quiet', 'Sleepy', 'Feral', 'Shy'], NOUN = ['Goblin', 'Oracle', 'Intern', 'Hamster', 'Gremlin', 'Robot'];
@@ -259,6 +263,7 @@
   // ---------- device (2000s handheld, same size on both faces) ----------
   var SK_SHORT = { spot: 'SPOT', orders: 'LIMITS', earn: 'EARN', perps: 'SHORTS', borrow: 'BORROW', dividends: 'DIVIDEND', income: 'INCOME', basket: 'BASKET', memes: 'MEMES' };
   var CONN = [['news', 'News headlines', 'BETA · headlines on its stocks'], ['top', 'Top agents', 'BETA · what the best agents did'], ['x', 'X accounts', 'BETA · posts from accounts below'], ['chain', 'Onchain flows', 'SOON · Robinhood Chain pools', 'soon']];
+  var SPIN_ICON = '<svg aria-hidden="true" class="spin" viewBox="0 0 24 24" style="width:18px;height:18px;display:block"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20.5 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var TUNE_ICON = '<svg aria-hidden="true" viewBox="0 0 24 24" style="width:20px;height:20px;display:block;transform:rotate(90deg)"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20.5 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function kc(btn, label) { return '<div class="dv-kc"><div class="dv-ks">' + btn + '</div><span class="dv-eng">' + label + '</span></div>'; }
   function buildShell() {
@@ -298,7 +303,7 @@
   function ovBtn(act, t, primary, extra) { return '<button type="button" class="scr-btn' + (primary ? ' on' : '') + '" data-act="' + act + '"' + (extra || '') + '>[ ' + t + ' ]</button>'; }
   function screenTop(m) {
     if (m.hatching) return 'BUILDING…';
-    if (st.sim) return 'SIMULATION · PAST WEEK · NOT REAL';
+    if (st.sim) return simElapsed() < SIM_SETUP ? 'SIMULATION · SETTING UP' : 'SIMULATION · PAST WEEK · ' + Math.max(0, Math.ceil((SIM_TOTAL - simElapsed()) / 1000)) + 's';
     var a = st.agentRef;
     if (st.ctx === 'mine' && a) return (a.paused ? 'PAUSED' : (a.mode === 'demo' ? 'DEMO · $1,000 VIRTUAL' : 'LIVE · VAULT $' + (a.vault || 0))) + ' · #' + a.id;
     if (st.ctx === 'public' && a) return 'AGENT #' + a.id + ' · ' + shortAddr(a.owner);
@@ -323,7 +328,12 @@
     var bt = st.btick || 0;
     setHTML('scrTop', '<span>' + screenTop(m) + '</span><span>NVDA · 24/7</span>');
     var s = '';
-    if (m.hatching) {
+    if (st.sim && simElapsed() < SIM_SETUP) {
+      var sp = simElapsed() / SIM_SETUP;
+      s += '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;flex:1 1 auto"><img alt="" class="shake" style="width:120px;height:120px" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: 'ok' }) + '"><div style="display:flex;flex-direction:column;gap:6px;font-size:13px">';
+      ['loading last week of prices', 'applying your settings', 'starting the replay'].forEach(function (l, i) { var dn = sp >= (i + 1) / 3, cur = !dn && sp >= i / 3; s += '<span style="color:' + (dn ? '#c6f432' : (cur ? '#d9ff5c' : '#4d5f1c')) + '">' + (dn ? '✓' : (cur ? '›' : '·')) + ' ' + l + '</span>'; });
+      s += '<span style="font-size:10px;color:#6f8a22;margin-top:4px">not real trades · sample prices</span></div></div>';
+    } else if (m.hatching) {
       s += '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;flex:1 1 auto"><img alt="" class="' + (bt < 8 ? 'shake' : 'pop') + '" style="width:140px;height:140px" src="' + robot(m.subject, { preset: m.preset, stage: bt < 8 ? 0 : 1, mood: 'happy' }) + '"><div style="display:flex;flex-direction:column;gap:6px;font-size:13px">';
       ['reading its personality', 'compiling rules', 'hatching', 'replaying last week'].forEach(function (l, i) {
         var dn = bt >= (i + 1) * 4, cur = !dn && bt >= i * 4;
@@ -357,7 +367,7 @@
     var ro = function (v, l, c) { return '<div class="dv-kc"><div class="dv-lcd dv-ro"><span class="doto" style="color:' + c + '">' + v + '</span></div><span class="dv-eng">' + l + '</span></div>'; };
     setHTML('dvRead', ro(fmt(m.sim.ret), '7D RETURN', m.sim.ret >= 0 ? '#c6f432' : '#ff7a6b') + ro(('0' + m.trades.length).slice(-2), 'TRADES', '#d9ff5c') + ro((m.sim.dd * 100).toFixed(1) + '%', 'MAX DD', '#d9ff5c'));
     setHTML('dvKeys', kc('<button type="button" class="dv-key dv-round" data-act="flip" aria-label="Tune: flip the device to the control panel">' + TUNE_ICON + '</button>', 'TUNE') +
-      kc('<button type="button" class="dv-key dv-round" data-act="replay" aria-label="Simulate last week in black and white">▶</button>', 'SIMULATE') +
+      kc('<button type="button" class="dv-key dv-round' + (st.sim ? ' busy' : '') + '" data-act="replay"' + (st.sim ? ' aria-disabled="true" aria-label="Simulation running"' : ' aria-label="Simulate last week in black and white"') + '>' + (st.sim ? SPIN_ICON : '▶') + '</button>', st.sim ? 'RUNNING' : 'SIMULATE') +
       kc('<button type="button" class="dv-key dv-round" data-act="share" aria-label="Share on X"' + (m.born ? '' : ' aria-disabled="true" title="Try an agent first"') + '>⇪</button>', 'SHARE') +
       limeKey());
   }
@@ -426,9 +436,23 @@
     else setHTML('dvSlot', '<span class="dv-mouth" aria-hidden="true"></span><span style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto"><span class="mono" style="font-size:10px;font-weight:800;letter-spacing:.1em;color:' + (md ? '#c6f432' : '#e6e7ea') + '">' + (md ? 'LOADED · ' + esc(md.name.toUpperCase()).slice(0, 26) : 'STRATEGY FILE · .MD') + '</span><span class="mono" style="font-size:10px;color:#8a8d96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (md ? (md.size / 1024).toFixed(1) + ' KB · ' + md.lines + ' lines' + (md.title ? ' · ' + esc(md.title) : '') : 'your playbook in markdown · read in Season 0') + '</span></span>' +
       (md ? '<button type="button" class="dv-key dv-slotbtn" data-act="eject" aria-label="Remove strategy file">EJECT</button>' : '<button type="button" class="dv-key dv-slotbtn" data-act="load" aria-label="Load a strategy .md file">LOAD</button>'));
     setHTML('dvKeysB', kc('<button type="button" class="dv-key dv-round" data-act="flip" aria-label="Flip back to the screen">' + TUNE_ICON.replace('rotate(90deg)', 'rotate(-90deg) scaleX(-1)') + '</button>', 'FRONT') +
-      kc('<button type="button" class="dv-key dv-sim" data-act="simulate">▶ SIMULATE</button>', 'PAST WEEK · B/W') +
+      kc('<button type="button" class="dv-key dv-sim' + (st.sim ? ' busy' : '') + '" data-act="simulate"' + (st.sim ? ' aria-disabled="true"' : '') + '>' + (st.sim ? SPIN_ICON + ' RUNNING' : '▶ SIMULATE') + '</button>', 'PAST WEEK · B/W') +
       limeKey());
     if (fk) { var n = document.querySelector('#device ' + fk); if (n) n.focus(); }
+  }
+  var hotAnimating = false;
+  function followCables(ms) {
+    var svg = $('cables'); if (!svg) return; svg.classList.add('live'); var t0 = performance.now();
+    (function step() { cableKey = ''; drawCables(); if (performance.now() - t0 < ms) requestAnimationFrame(step); else svg.classList.remove('live'); })();
+  }
+  function animHot(open) {
+    var g = $('skills'); render();
+    if (reduce) { g.hidden = !open; drawCables(); return; }
+    hotAnimating = true; g.hidden = false; g.style.overflow = 'hidden';
+    var full = g.scrollHeight; g.style.transition = 'none'; g.style.maxHeight = (open ? 0 : full) + 'px'; g.style.opacity = open ? 0 : 1; void g.offsetWidth;
+    g.style.transition = 'max-height .3s ease, opacity .3s ease'; g.style.maxHeight = (open ? full : 0) + 'px'; g.style.opacity = open ? 1 : 0;
+    followCables(340);
+    setTimeout(function () { hotAnimating = false; g.style.transition = ''; g.style.maxHeight = ''; g.style.opacity = ''; g.style.overflow = ''; g.hidden = !st.hotOpen; cableKey = ''; drawCables(); }, 320);
   }
   var cableKey = '';
   function drawCables() {
@@ -444,7 +468,7 @@
     if (st.face === 'back') B = [B[1], B[0]];
     var f = function (v) { return v.toFixed(1); };
     var P = [0, 1].map(function (i) {
-      var x1 = A[i][0], y1 = A[i][1], x2 = B[i][0], y2 = B[i][1];
+      var x1 = A[i][0], y1 = A[i][1] + 24, x2 = B[i][0], y2 = B[i][1] + 24;
       if (y2 > y1 + 220 && Math.abs(x2 - x1) < 240) {
         var side = 8 + i * 12;
         return 'M' + f(x1) + ' ' + f(y1) + ' C' + f(x1) + ' ' + f(y1 + 60) + ' ' + side + ' ' + f(y1 + 30) + ' ' + side + ' ' + f(y1 + 120) + ' L' + side + ' ' + f(y2 + 10) + ' C' + side + ' ' + f(y2 + 80) + ' ' + f(x2) + ' ' + f(y2 + 80) + ' ' + f(x2) + ' ' + f(y2);
@@ -453,7 +477,7 @@
       return 'M' + f(x1) + ' ' + f(y1) + ' C' + f(x1) + ' ' + f(sag) + ' ' + f(x2) + ' ' + f(sag) + ' ' + f(x2) + ' ' + f(y2);
     });
     var key = P.join('|'); if (key === cableKey) return; cableKey = key;
-    var boot = function (id, x, y) { var r = $(id); if (!r) return; r.setAttribute('x', (x - 5).toFixed(1)); r.setAttribute('y', (y + 4).toFixed(1)); r.setAttribute('width', 10); r.setAttribute('height', 14); r.setAttribute('rx', 3); };
+    var boot = function (id, x, y) { var r = $(id); if (!r) return; r.setAttribute('x', (x - 5.5).toFixed(1)); r.setAttribute('y', (y - 2).toFixed(1)); r.setAttribute('width', 11); r.setAttribute('height', 28); r.setAttribute('rx', 2.5); };
     boot('bA1', A[0][0], A[0][1]); boot('bA2', B[0][0], B[0][1]); boot('bB1', A[1][0], A[1][1]); boot('bB2', B[1][0], B[1][1]);
     boot('bA1t', A[0][0], A[0][1]); boot('bA2t', B[0][0], B[0][1]); boot('bB1t', A[1][0], A[1][1]); boot('bB2t', B[1][0], B[1][1]);
     [['cAo', 0], ['cA', 0], ['cAt', 0], ['cAh', 0], ['cBo', 1], ['cB', 1], ['cBt', 1], ['cBh', 1]].forEach(function (q) { var el = $(q[0]); el.setAttribute('d', P[q[1]]); try { el.style.d = 'path("' + P[q[1]] + '")'; } catch (e) {} });
@@ -466,7 +490,7 @@
     var swap = function () { st.face = to; buildFace(); if (to === 'back') renderBack(); else render(); drawCables(); };
     if (reduce) { swap(); return; }
     var dg = to === 'back' ? 90 : -90;
-    el.style.transition = 'transform .2s ease-in';
+    el.style.transition = 'transform .25s ease-in';
     el.style.transform = 'perspective(1400px) rotateY(' + dg + 'deg)';
     if (port) { port.style.transition = el.style.transition; port.style.transform = 'perspective(600px) rotateY(' + dg + 'deg)'; }
     setTimeout(function () {
@@ -474,10 +498,10 @@
       el.style.transition = 'none';
       el.style.transform = 'perspective(1400px) rotateY(' + (-dg) + 'deg)';
       void el.offsetWidth;
-      el.style.transition = 'transform .22s ease-out';
+      el.style.transition = 'transform .25s ease-out';
       el.style.transform = 'perspective(1400px) rotateY(0deg)';
-      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(600px) rotateY(' + (-dg) + 'deg)'; void port.offsetWidth; port.style.transition = 'transform .22s ease-out'; port.style.transform = 'perspective(600px) rotateY(0deg)'; }
-    }, 210);
+      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(600px) rotateY(' + (-dg) + 'deg)'; void port.offsetWidth; port.style.transition = 'transform .25s ease-out'; port.style.transform = 'perspective(600px) rotateY(0deg)'; }
+    }, 250);
   }
 
   function bar(label, v, col) {
@@ -496,7 +520,7 @@
     $('hatchBtn').textContent = 'SET UP ▶';
     setHTML('skills', hotHTML());
     var hn = hotNames(), hh = $('hotHead');
-    if (hh) { setHTML('hotHead', 'HOT OPTIONS · <b>' + (hn.length ? hn.length + ' ON' : 'OFF') + '</b>' + (hn.length ? ' · ' + esc(hn.join(', ')).slice(0, 44) : ' · AI BASKET, MEME SNIPER, X ALPHA…') + '<i>' + (st.hotOpen ? '▴ HIDE' : '▾ SHOW') + '</i>'); hh.setAttribute('aria-expanded', !!st.hotOpen); $('skills').hidden = !st.hotOpen; }
+    if (hh) { setHTML('hotHead', 'HOT OPTIONS · <b>' + (hn.length ? hn.length + ' ON' : 'OFF') + '</b>' + (hn.length ? ' · ' + esc(hn.join(', ')).slice(0, 44) : ' · AI BASKET, MEME SNIPER, X ALPHA…') + '<i>' + (st.hotOpen ? '▴ HIDE' : '▾ SHOW') + '</i>'); hh.setAttribute('aria-expanded', !!st.hotOpen); if (!hotAnimating) $('skills').hidden = !st.hotOpen; }
 
     // hero dynamic area: presets inside the input panel
     var hd = '';
@@ -659,7 +683,7 @@
     else if (a === 'notify' && st.agentRef) { var nk = b.getAttribute('data-k'); st.agentRef.notify = st.agentRef.notify || {}; st.agentRef.notify[nk] = !st.agentRef.notify[nk]; saveMe(); renderMe(); }
     else if (a === 'tglink') { if (ME.tg) ME.tg.linked = true; saveMe(); renderMe(); }
     else if (a === 'copycode') { try { navigator.clipboard.writeText('/start ' + (ME.tg ? ME.tg.code : '')); } catch (er) {} b.textContent = 'Copied'; }
-    else if (a === 'hottog') { st.hotOpen = !st.hotOpen; render(); }
+    else if (a === 'hottog') { st.hotOpen = !st.hotOpen; animHot(st.hotOpen); }
     else if (a === 'hot') { toggleHot(b.getAttribute('data-k')); render(); if (st.face === 'back') renderBack(); }
     else if (a === 'tf') { st.tf = b.getAttribute('data-v'); render(); }
     else if (a === 'pyes' || a === 'pno') { applyPager(b.getAttribute('data-id'), a === 'pyes'); refresh(); }
@@ -673,7 +697,7 @@
     else if (a === 'mode') { st.mode = b.getAttribute('data-m'); st.mintOpen = false; renderBack(); }
     else if (a === 'load') { var fi = $('mdFile'); if (fi) fi.click(); }
     else if (a === 'eject') { st.md = null; $('mdFile').value = ''; renderBack(); }
-    else if (a === 'replay') set({ sim: !reduce, simEnd: undefined, rtick: reduce ? undefined : st.tick, mintOpen: false, shareOpen: false, saveOpen: false, flow: null });
+    else if (a === 'replay') { if (st.sim) return; startSim(); render(); }
     else if (a === 'evolve') set({ dnaPatch: Object.assign({}, st.dnaPatch || {}, m.prop.patch), xp: m.xp + 15, dismissed: true });
     else if (a === 'notnow') set({ dismissed: true });
     else if (a === 'bet') { var n = b.getAttribute('data-n'); set({ bet: st.bet === n ? null : n }); }
@@ -689,8 +713,9 @@
     else if (a === 'addx') addHandle();
     else if (a === 'rmx') { st.tune.handles.splice(+b.getAttribute('data-i'), 1); renderBack(); }
     else if (a === 'simulate') {
+      if (st.sim) return;
       if (st.phase !== 'born') { st.subject = prompt() || currentExample(); st.phase = 'born'; st.xp = 0; }
-      st.sim = !reduce; st.simEnd = undefined; st.rtick = reduce ? undefined : st.tick; st.dismissed = false; st.mintOpen = false; st.shareOpen = false; st.saveOpen = false;
+      startSim();
       flip('front');
     }
     if (a !== 'logout') saveMine();
@@ -1054,8 +1079,9 @@
         if (b >= 16) { st.phase = 'born'; st.btick = 0; st.tick = 999; if (st.flipAfterBuild) { st.flipAfterBuild = false; st.mode = 'EQ'; setTimeout(function () { if (st.face !== 'back') flip('back'); }, 1000); } } else { st.btick = b; }
       } else if (st.phase === 'born') {
         st.tick++;
-      } else if (st.sim) st.tick++;
-      if (st.sim) { var sm = model(); if (sm.done) { if (st.simEnd === undefined) st.simEnd = st.tick; else if (st.tick - st.simEnd > 28) { st.sim = false; st.simEnd = undefined; } } }
+      }
+      if (st.face === 'back' && st.sim && $('dvKeysB')) renderBack();
+      if (st.sim && simElapsed() >= SIM_TOTAL) { st.sim = false; st.simStart = 0; if (st.face === 'back') renderBack(); }
       // don't re-render while user is typing an X-share / focused inside device buttons
       render();
     }, 140);

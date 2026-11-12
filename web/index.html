@@ -252,6 +252,19 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .inp-presets .pk{flex:0 0 auto;white-space:nowrap}
 .pk.on{background:#c6f432;color:#0d130a;border-color:#c6f432}
 #cables .boot{fill:#17181b;stroke:#0b0c0e;stroke-width:1;rx:3}
+.inp-jacks{bottom:-6px}
+.inp-jacks .jack,.dv-port .jack{background:none;box-shadow:none}
+.dv-port .jack{height:10px}
+#cables path{transition:d .3s ease-in-out}
+#cables.live path{transition:none}
+#cables .boot{fill:#1d1e22;stroke:#0b0c0e;stroke-width:1}
+.dv-key.busy{cursor:not-allowed;color:#8a8d96}
+.spin{animation:spin 1.1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dv-sim .spin{display:inline-block!important;vertical-align:-3px;margin-right:6px;width:14px!important;height:14px!important}
+.inp{gap:10px}
+#heroSec{gap:48px!important}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
@@ -297,7 +310,7 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 
 <main id="top" class="wrap"><div id="pgHome">
 <section id="heroSec" style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:40px 0 130px;overflow-x:clip;overflow-y:visible;position:relative">
-<svg id="cables" aria-hidden="true"><rect id="bA1" class="boot"/><rect id="bA2" class="boot"/><rect id="bB1" class="boot"/><rect id="bB2" class="boot"/><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#b9e63a"/><path id="cAt" class="ct"/><path id="cAh" class="ch"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#f2782a"/><path id="cBt" class="ct"/><path id="cBh" class="ch"/><rect id="bA1t" class="boot"/><rect id="bA2t" class="boot"/><rect id="bB1t" class="boot"/><rect id="bB2t" class="boot"/></svg>
+<svg id="cables" aria-hidden="true"><rect id="bA1" class="boot"/><rect id="bA2" class="boot"/><rect id="bB1" class="boot"/><rect id="bB2" class="boot"/><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#b9e63a"/><path id="cAt" class="ct"/><path id="cAh" class="ch"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#f2782a"/><path id="cBt" class="ct"/><path id="cBh" class="ch"/></svg>
 <div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px;position:relative;z-index:2">
 <span class="eyebrow">AI trading league · Robinhood Chain stock tokens</span>
 <h1 style="margin:0;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-size:clamp(44px,5.6vw,72px)">Raise an AI trader.</h1>
@@ -442,6 +455,6 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Try your AI trader</a></div>
 
-<script src="app.js?v=20"></script>
+<script src="app.js?v=21"></script>
 </body>
 </html>
