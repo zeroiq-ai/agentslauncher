@@ -231,6 +231,22 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 #cables .ci{stroke-width:7}
 .dv{box-shadow:inset 0 2px 0 rgba(255,255,255,.14),inset 0 -4px 0 rgba(0,0,0,.45),inset 2px 0 0 rgba(255,255,255,.05),0 6px 0 #1d1e22,0 11px 0 #141518,0 30px 50px rgba(0,0,0,.3)}
 @media (prefers-reduced-motion:reduce){#cables path{transition:none}}
+#cables .co{stroke:#0b0c0e;stroke-width:8}
+#cables .ci{stroke-width:5}
+#cables .ct{stroke:rgba(0,0,0,.28);stroke-width:5;stroke-dasharray:2 5}
+#cables .ch{stroke:rgba(255,255,255,.5);stroke-width:1.2;stroke-dasharray:7 5}
+.jack{width:14px;height:14px}
+.hot-h{display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:0;padding:4px 0;cursor:pointer;font:800 9px 'JetBrains Mono',monospace;letter-spacing:.12em;color:#8a8d96;text-align:left}
+.hot-h b{color:#c6f432;font-weight:800}.hot-h i{font-style:normal;margin-left:auto;color:#b9bcc4}
+.hot-h:focus-visible{outline:2px solid #c6f432;outline-offset:2px}
+.inp-hot .hk{min-height:32px;padding:6px 9px;font-size:12px}
+.inp-hot[hidden]{display:none}
+.preset-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;width:100%;box-sizing:border-box;max-width:420px;margin-top:4px;padding:10px 12px;background:#fff;border-radius:14px;position:relative}
+.preset-row:empty{display:none}
+.preset-row .pk{background:#f4f4f1;color:#2f2f2f;border-color:#e0e0da;font-size:10.5px;padding:5px 7px;min-height:28px}
+.preset-row .pk:hover{color:#111;border-color:#111}
+.dv.sim .dv-screen{filter:grayscale(1) contrast(1.08)}
+.dv.sim .scr-top span:first-child{color:#fff}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
@@ -276,28 +292,28 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 
 <main id="top" class="wrap"><div id="pgHome">
 <section id="heroSec" style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:40px 0 130px;overflow-x:clip;overflow-y:visible;position:relative">
-<svg id="cables" aria-hidden="true"><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#c6f432"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#ff7a1a"/></svg>
+<svg id="cables" aria-hidden="true"><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#b9e63a"/><path id="cAt" class="ct"/><path id="cAh" class="ch"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#f2782a"/><path id="cBt" class="ct"/><path id="cBh" class="ch"/></svg>
 <div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px;position:relative;z-index:2">
 <span class="eyebrow">AI trading league · Robinhood Chain stock tokens</span>
 <h1 style="margin:0;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-size:clamp(44px,5.6vw,72px)">Raise an AI trader.</h1>
 <span class="doto" style="align-self:flex-start;font-size:22px;letter-spacing:1px;background:#111;color:#c6f432;padding:6px 12px;border-radius:8px">ZERO IQ REQUIRED</span>
-<p class="lead" style="max-width:500px">Type a personality into the input. It plugs into the device and trades last week in seconds. Mint it and it trades for you, or copy any agent from the leaderboard.</p>
+<p class="lead" style="max-width:500px">Describe a personality in the input. It plugs into the device, where you set it up. Mint it and it trades for you, or copy any agent from the leaderboard.</p>
 <div class="inp" id="inPanel">
-<div class="inp-top"><span style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss" style="font-size:16px">ZEROIQ</span><span class="dv-eng">INPUT · IN-01</span></span><span class="inp-steps" id="inSteps"><span class="on">1 DESCRIBE</span><span>2 TRY</span><span>3 MINT</span></span></div>
+<div class="inp-top"><span style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss" style="font-size:16px">ZEROIQ</span><span class="dv-eng">INPUT · IN-01</span></span><span class="inp-steps" id="inSteps"><span class="on">1 DESCRIBE</span><span>2 SET UP</span><span>3 MINT</span></span></div>
 <div class="inp-lcd">
 <label for="prompt" class="inp-lbl">PERSONALITY ▸</label>
 <textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm"></textarea>
 <div class="inp-name"><label for="agentName" class="inp-lbl">NAME ▸</label><input id="agentName" maxlength="24" autocomplete="off"><span>EDITABLE UNTIL MINT</span></div>
 </div>
-<div style="display:flex;flex-direction:column;gap:8px"><span class="dv-eng" id="skillsLabel" style="text-align:left">HOT OPTIONS · PICK ANY</span><div id="skills" class="inp-hot" role="group" aria-labelledby="skillsLabel"></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><button type="button" class="hot-h" id="hotHead" data-act="hottog" aria-expanded="false" aria-controls="skills"></button><div id="skills" class="inp-hot" role="group" aria-label="Hot options" hidden></div></div>
 <div id="heroDyn" style="display:flex;flex-direction:column;gap:8px"></div>
-<div class="inp-foot"><span class="dv-eng" style="text-align:left">FREE TO TRY · MINT 0.001 ETH</span><button type="button" class="dv-key lime inp-go" data-act="hatch" id="hatchBtn">TRY IT ▶</button></div>
+<div class="inp-foot"><span class="dv-eng" style="text-align:left">FREE TO SET UP · MINT 0.001 ETH</span><button type="button" class="dv-key lime inp-go" data-act="hatch" id="hatchBtn">SET UP ▶</button></div>
 <div class="inp-jacks" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div>
 </div>
 </div>
 <div id="heroDevCol" style="flex:1 1 420px;min-width:0;display:flex;justify-content:center;position:relative">
 <div class="ghost g1" aria-hidden="true"></div><div class="ghost g2" aria-hidden="true"></div>
-<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="device" class="dv"></div><div class="dv-port" id="dvPort" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
+<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="device" class="dv"></div><div class="dv-port" id="dvPort" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div><div id="presetRow" class="preset-row"></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
 </div>
 </section>
 
@@ -421,6 +437,6 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Try your AI trader</a></div>
 
-<script src="app.js?v=18"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>
