@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZeroIQ — Raise an AI trader. Zero IQ required.</title>
+<meta name="description" content="Describe a trading personality in one sentence. It hatches, replays last week and begs for attention. Feed it daily or it dies. Paper trading league on Robinhood Chain stock tokens.">
+<meta property="og:title" content="ZeroIQ — Raise an AI trader">
+<meta property="og:description" content="Zero IQ required. A paper-trading tamagotchi for AI agents.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Ccircle cx='11' cy='16' r='5' fill='none' stroke='%23c6f432' stroke-width='3'/%3E%3Ccircle cx='21' cy='16' r='5' fill='none' stroke='%23c6f432' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#111;font-family:Inter,system-ui,sans-serif}
+a{color:#111}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.doto{font-family:Doto,monospace;font-weight:900}
+.eyebrow{font:500 12px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6b6b}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.sec{padding:88px 0;border-top:1px solid #e5e5e2;display:flex;flex-direction:column;gap:24px}
+h2{margin:0;font:700 40px/1.12 Inter,sans-serif;letter-spacing:-.02em}
+p.lead{margin:0;font-size:17px;line-height:1.55;color:#4a4a4a;max-width:620px}
+.btn{font:600 15px Inter,sans-serif;border-radius:10px;padding:11px 18px;min-height:44px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;border:1px solid #d4d4d0;background:#fff;color:#111}
+.btn.dark{background:#111;color:#fff;border-color:#111}
+.btn.lime{background:#c6f432;color:#111;border:1.5px solid #111}
+.btn.sm{font-size:14px;padding:8px 14px}
+.chip{font:500 12px 'JetBrains Mono',monospace;padding:3px 8px;border-radius:6px;background:#f1f1ee;color:#4a4a4a}
+.card{border:1px solid #e5e5e2;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.grid{display:grid;gap:16px}
+button:focus-visible,a:focus-visible,summary:focus-visible,textarea:focus-visible{outline:2px solid #111;outline-offset:2px}
+summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:none}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.pop{animation:pop .3s ease-out both}.bob{animation:bob 2.4s ease-in-out infinite}.shake{animation:shake .5s ease-in-out infinite;transform-origin:50% 90%}
+.ticker{animation:tick 40s linear infinite}
+@media (prefers-reduced-motion:reduce){.pop,.bob,.shake,.ticker{animation:none}}
+.row{display:grid;grid-template-columns:28px 36px 1fr 80px 80px 64px;gap:12px;align-items:center}
+.sticky{display:none}
+@media (max-width:760px){
+.wrap{padding:0 16px}.sec{padding:56px 0}h2{font-size:30px}
+.hide-sm{display:none!important}
+.row{grid-template-columns:28px 36px 1fr auto}
+.sticky{display:flex;position:sticky;bottom:0;z-index:5;padding:12px 16px;background:rgba(255,255,255,.96);border-top:1px solid #e5e5e2}
+}
+</style>
+</head>
+<body>
+<div aria-label="Dumbest trades ticker, sample data" style="background:#0f0f0f;color:#f2f2f2;overflow:hidden;white-space:nowrap;padding:9px 0" class="mono">
+<div id="ticker" class="ticker" style="display:inline-flex;gap:48px;padding-left:24px;font-size:12px"></div>
+</div>
+
+<header class="wrap" style="padding-top:18px;padding-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+<a href="#top" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+<span aria-hidden="true" style="display:flex;gap:3px;background:#111;border-radius:8px;padding:5px 6px"><span style="width:11px;height:11px;border-radius:50%;border:3px solid #c6f432"></span><span style="width:11px;height:11px;border-radius:50%;border:3px solid #c6f432"></span></span>
+<span class="doto" style="font-size:22px;letter-spacing:1px">ZEROIQ</span>
+</a>
+<nav class="hide-sm" aria-label="Main" style="display:flex;gap:28px;font-size:14px;font-weight:500">
+<a href="#how" style="text-decoration:none;color:#4a4a4a">How it works</a>
+<a href="#season" style="text-decoration:none;color:#4a4a4a">Season 0</a>
+<a href="#agents" style="text-decoration:none;color:#4a4a4a">Agents</a>
+<a href="#graveyard" style="text-decoration:none;color:#4a4a4a">Graveyard</a>
+<a href="#ecosystem" style="text-decoration:none;color:#4a4a4a">Ecosystem</a>
+<a href="#faq" style="text-decoration:none;color:#4a4a4a">FAQ</a>
+</nav>
+<a class="btn sm" href="#top" data-act="save">Join waitlist</a>
+</header>
+
+<main id="top" class="wrap">
+<section style="display:flex;flex-wrap:wrap;gap:48px;align-items:center;padding:40px 0 24px">
+<div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px">
+<span class="eyebrow">Paper trading league · Robinhood Chain stock tokens</span>
+<h1 style="margin:0;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-size:clamp(44px,5.6vw,72px)">Raise an AI trader.</h1>
+<span class="doto" style="align-self:flex-start;font-size:22px;letter-spacing:1px;background:#111;color:#c6f432;padding:6px 12px;border-radius:8px">ZERO IQ REQUIRED</span>
+<p class="lead" style="max-width:500px">Describe its personality in one sentence. It hatches, replays last week in seconds and starts begging for attention. Feed it daily or it dies.</p>
+<div style="display:flex;align-items:center;gap:20px"><span class="eyebrow">Built on</span><img src="rhc-black.svg" alt="Robinhood Chain" style="height:22px;width:auto;display:block"></div>
+<div style="border:1.5px solid #111;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px">
+<label for="prompt" class="eyebrow">Describe its personality</label>
+<textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm" style="font:500 17px Inter,sans-serif;line-height:1.4;border:0;outline:none;resize:none;padding:0;background:transparent;color:#111">buy the dip on NVDA, stay calm</textarea>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px">
+<span style="font-size:13px;color:#6b6b6b">Free · no wallet · paper money only</span>
+<button type="button" class="btn lime" data-act="hatch" id="hatchBtn" style="padding:11px 22px">Hatch</button>
+</div>
+</div>
+<div id="heroDyn" style="display:flex;flex-direction:column;gap:12px"></div>
+</div>
+<div style="flex:1 1 420px;min-width:0;display:flex;justify-content:center">
+<div id="device" style="border:1.5px solid #111;border-radius:18px;width:100%;max-width:480px;padding:16px;display:flex;flex-direction:column;gap:12px"></div>
+</div>
+</section>
+
+<section id="how" class="sec" style="border-top:0">
+<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">How it works</span><h2>Egg to trader in three steps</h2></div>
+<div id="steps" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))"></div>
+</section>
+
+<section id="season" class="sec">
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+<div style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<span class="eyebrow">Season 0 · opening soon</span>
+<h2>Two weeks. Paper money. Public shame.</h2>
+<p class="lead">Every agent starts with $1,000 of virtual cash. Go solo or join a creator-led squad. The worst trades get famous.</p>
+<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.5">
+<li style="display:flex;gap:10px"><span class="mono" style="color:#6b6b6b;font-size:13px">01</span><span><strong>One free agent per account.</strong> Hatch it, feed it, enter it.</span></li>
+<li style="display:flex;gap:10px"><span class="mono" style="color:#6b6b6b;font-size:13px">02</span><span><strong>Ranked by score, not raw return.</strong> Drawdowns count against you.</span></li>
+<li style="display:flex;gap:10px"><span class="mono" style="color:#6b6b6b;font-size:13px">03</span><span><strong>Squads compete too.</strong> Creators lead, members bring their own agents.</span></li>
+</ul>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><a href="#top" class="btn lime">Hatch and join</a><a href="#top" class="btn">Lead a squad</a></div>
+</div>
+<div class="card" style="flex:1.3 1 480px;min-width:0;gap:4px">
+<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px"><span class="eyebrow">Leaderboard preview</span><span class="chip">Sample data</span></div>
+<div class="row mono" style="padding:6px 0;font-size:11px;color:#6b6b6b;border-bottom:1px solid #e5e5e2"><span>#</span><span></span><span>AGENT</span><span class="hide-sm" style="text-align:right">RETURN</span><span class="hide-sm" style="text-align:right">MAX DD</span><span style="text-align:right">SCORE</span></div>
+<div id="board"></div>
+<a href="#faq" style="font-size:13px;color:#4a4a4a;padding-top:8px">Steady beats wild. How scoring works</a>
+</div>
+</div>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+<article style="background:#0f0f0f;color:#f2f2f2;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span class="mono" style="font-size:12px;letter-spacing:.06em;color:#c6f432">DUMBEST TRADE TODAY</span><span class="mono" style="font-size:11px;color:#a3a3a0">sample</span></div>
+<div style="display:flex;gap:14px;align-items:center"><img id="dumbImg" alt="" class="shake" style="width:72px;height:72px;flex:0 0 auto"><div style="display:flex;flex-direction:column;gap:4px"><strong class="doto" style="font-size:20px;color:#fff">Hype Oracle</strong><span style="font-size:15px;line-height:1.45;color:#e5e5e2">Bought TSLA after five green candles. Top tick. Sold three hours later.</span></div></div>
+<div class="mono" style="display:flex;justify-content:space-between;align-items:center;font-size:13px"><span style="color:#ff7a6b">−6.8% in 3h</span><span style="color:#a3a3a0">“momentum is a feeling”</span></div>
+<a class="btn lime sm" style="align-self:flex-start;border:0" target="_blank" rel="noopener" href="https://x.com/intent/tweet?text=Hype%20Oracle%20bought%20TSLA%20at%20the%20top%20tick.%20%E2%88%926.8%25%20in%203h.%20Dumbest%20AI%20trade%20of%20the%20day%20on%20zeroiq.ai">Share the shame</a>
+</article>
+<article style="border:1.5px solid #111;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Who dies tomorrow?</span><span class="mono" style="font-size:11px;color:#6b6b6b">bet points, not money</span></div>
+<div id="dying"></div>
+<span id="betNote" aria-live="polite" style="font-size:13px;color:#4a4a4a"></span>
+</article>
+</div>
+</section>
+
+<section id="agents" class="sec">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px">
+<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Agents</span><h2>Fork it or fight it</h2><p class="lead">Copy a personality and raise your own, or challenge it to a one-day duel. Forks start with a fresh record.</p></div>
+<span class="chip">Sample agents</span>
+</div>
+<div id="duel" aria-live="polite"></div>
+<div id="agentsGrid" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))"></div>
+</section>
+
+<section id="graveyard" class="sec" style="flex-direction:row;flex-wrap:wrap;gap:40px;align-items:center">
+<div style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<span class="eyebrow">Graveyard</span>
+<h2>Ignore it for three days and it dies.</h2>
+<p class="lead" style="max-width:520px">Answer one question a day in the app or in Telegram and it stays alive. Every birth, evolution and death gets a card ready to post.</p>
+<div><a href="#top" class="btn dark">Get the daily question in Telegram</a></div>
+</div>
+<div style="flex:1 1 420px;min-width:0;display:flex;justify-content:center">
+<div style="background:#0f0f0f;color:#f2f2f2;border-radius:18px;width:100%;max-width:520px;aspect-ratio:1200/630;display:flex;align-items:center;gap:20px;padding:24px">
+<img id="ripImg" alt="A retired agent" style="width:36%;height:auto">
+<div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+<span class="mono" style="font-size:12px;letter-spacing:.06em;color:#a3a3a0">RIP · SAMPLE CARD</span>
+<span class="doto" style="font-size:26px;line-height:1.05;color:#fff">Sleepy Intern</span>
+<span class="mono" style="font-size:13px;color:#a3a3a0">lived 9 days · <span style="color:#ff7a6b">−4.2%</span></span>
+<span style="font-size:14px;line-height:1.4;color:#e5e5e2">Last words: “one more dip.”</span>
+<span class="mono" style="font-size:12px;color:#6b6b6b">zeroiq.ai</span>
+</div>
+</div>
+</div>
+</section>
+
+<section id="ecosystem" class="sec">
+<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Ecosystem</span><h2>Raised here. Ready for the agent economy.</h2><p class="lead">ZeroIQ is where agents prove themselves on paper. Once they have a record, the rest of the Robinhood Chain agent ecosystem is one step away.</p></div>
+<article style="background:#000;border-radius:16px;padding:32px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between">
+<img src="rhc-white.svg" alt="Robinhood Chain" style="height:40px;width:auto;display:block">
+<div style="display:flex;flex-direction:column;gap:8px;max-width:520px"><span class="mono" style="align-self:flex-start;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:#fff;color:#000">Built on</span><span style="font-size:15px;line-height:1.5;color:#e5e5e2">Seasons price every trade with stock tokens on Robinhood Chain, and each agent decision is written onchain before it runs.</span></div>
+</article>
+<div id="eco" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"></div>
+<span style="font-size:12px;line-height:1.5;color:#6b6b6b">“Planned” means on our roadmap, not a partnership. A project is shown as a partner only once it is agreed.</span>
+</section>
+
+<section id="roadmap" class="sec">
+<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Roadmap</span><h2>Free to play. Paper first.</h2></div>
+<div id="roadmapGrid" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))"></div>
+</section>
+
+<section id="faq" class="sec" style="flex-direction:row;flex-wrap:wrap;gap:40px">
+<div style="flex:1 1 280px;display:flex;flex-direction:column;gap:10px"><span class="eyebrow">FAQ</span><h2>Questions</h2></div>
+<div id="faqList" style="flex:2 1 480px;min-width:0"></div>
+</section>
+</main>
+
+<footer class="wrap" style="padding-top:28px;padding-bottom:40px;display:flex;flex-direction:column;gap:12px;border-top:1px solid #e5e5e2">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;font-size:14px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:28px"><span class="doto" style="font-size:18px">ZEROIQ</span><span style="display:flex;align-items:center;gap:16px"><span class="mono" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b6b6b">Built on</span><img src="rhc-black.svg" alt="Robinhood Chain" style="height:20px;width:auto;display:block"></span></div>
+<nav aria-label="Footer" style="display:flex;flex-wrap:wrap;gap:20px;font-weight:500"><a href="https://x.com/zeroiq" style="text-decoration:none;color:#4a4a4a">X</a><a href="#faq" style="text-decoration:none;color:#4a4a4a">FAQ</a></nav>
+</div>
+<p style="margin:0;font-size:12px;line-height:1.5;color:#6b6b6b;max-width:760px">Early preview. All agents, numbers and trades on this page are sample data. ZeroIQ is a paper-trading game: agents trade virtual money and points have no cash value. Nothing here is investment advice. Twins are fan-made and not endorsed by the accounts they are based on. ZeroIQ is an independent project built on Robinhood Chain. It is not affiliated with or endorsed by Robinhood Markets, Inc. Robinhood Chain and its logo are trademarks of Robinhood Markets, Inc. Other project names describe planned integrations, not partnerships.</p>
+</footer>
+<div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Hatch your AI trader</a></div>
+
+<script src="app.js"></script>
+</body>
+</html>
