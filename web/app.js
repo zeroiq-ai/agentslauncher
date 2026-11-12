@@ -147,7 +147,7 @@
   // ---------- state ----------
   var reduce = false;
   try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
-  var st = { tick: reduce ? 999 : 0, phase: 'idle', btick: 0, face: 'front', tune: { limit: 10, watch: { NVDA: true, TSLA: false, AAPL: true, AMZN: false, PLTR: true, COIN: false }, conn: { news: false, top: false, x: false }, handles: [] } };
+  var st = { tick: reduce ? 999 : 0, phase: 'idle', btick: 0, face: 'front', skills: { spot: true }, tune: { limit: 10, watch: { NVDA: true, TSLA: false, AAPL: true, AMZN: false, PLTR: true, COIN: false }, conn: { news: false, top: false, x: false }, handles: [] } };
   function set(patch) { Object.keys(patch).forEach(function (k) { st[k] = patch[k]; }); render(); }
 
   function prompt() { return $('prompt').value; }
@@ -191,12 +191,30 @@
   }
 
   // ---------- render ----------
+  var SKILLS = [
+    ['spot', 'Spot trades', 'Buys and sells stock tokens 24/7 on Uniswap, Arcus and Rialto', ''],
+    ['orders', 'Limit & stop orders', 'Sets entries, stop-losses and take-profits instead of market buys', ''],
+    ['earn', 'Earn on idle cash', 'Parks unused USDG in Morpho lending between trades', ''],
+    ['perps', 'Shorts & hedges', 'Opens short or hedge positions on Lighter or Arcus perps, 2x max', ''],
+    ['borrow', 'Borrow vs stocks', 'Borrows USDG against its stock tokens instead of selling them', ''],
+    ['dividends', 'Dividend yield', 'Trades or locks stock dividend yield on Pendle', ''],
+    ['income', 'Covered income', 'Sells part of its upside on TALIS for steady premium', ''],
+    ['basket', 'Publish a basket', 'Builds an index of its picks that others can follow', ''],
+    ['memes', 'Meme tokens', 'Trades memecoins on Robinhood Chain, including stock-paired ones', 'degen']
+  ];
+  function skillNames() { return SKILLS.filter(function (k) { return st.skills[k[0]]; }).map(function (k) { return k[1]; }); }
+  function skillsHTML() {
+    return SKILLS.map(function (k) {
+      var on = !!st.skills[k[0]];
+      return '<button type="button" data-act="skill" data-k="' + k[0] + '" aria-pressed="' + on + '" title="' + k[2] + '" style="font:500 13px Inter,sans-serif;border-radius:999px;padding:7px 12px;min-height:36px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:1px solid ' + (on ? '#111' : '#e5e5e2') + ';background:' + (on ? '#111' : '#f7f7f5') + ';color:' + (on ? '#fff' : '#2f2f2f') + '">' + (on ? '✓ ' : '') + k[1] + (k[3] ? '<span class="mono" style="font-size:10px;padding:1px 5px;border-radius:4px;background:' + (on ? '#c6f432' : '#ffe1dc') + ';color:#111">' + k[3] + '</span>' : '') + '</button>';
+    }).join('');
+  }
   function rulesText(d, limit) {
     var k = params(d);
     var watch = Object.keys(st.tune.watch).filter(function (t) { return st.tune.watch[t]; });
     return (d.style === 'momentum' ? 'BUY after ' + k.momN + ' green candle' + (k.momN > 1 ? 's' : '') : 'BUY after ' + k.dipN + ' red candle' + (k.dipN > 1 ? 's' : '')) + ' · size ' + Math.round(k.size * 100) + '% of cash\n' +
       'SELL at +' + ((k.tp - 1) * 100).toFixed(1) + '% or −' + ((1 - k.sl) * 100).toFixed(1) + '% · hold ≥ ' + k.minHold + 'h\n' +
-      'stops for the day at −' + limit + '% · trades ' + (watch.length ? watch.join(' ') : 'nothing yet');
+      'stops for the day at −' + limit + '% · trades ' + (watch.length ? watch.join(' ') : 'nothing yet') + '\nskills: ' + skillNames().join(', ');
   }
   var TUNE_PRESETS = { ZEN: { patience: 85, fomo: 10, risk: 25, freq: 25, style: 'dip' }, DIP: { patience: 65, fomo: 25, risk: 45, freq: 45, style: 'dip' }, MOMO: { patience: 30, fomo: 70, risk: 55, freq: 60, style: 'momentum' }, DEGEN: { patience: 10, fomo: 95, risk: 95, freq: 90, style: 'momentum' } };
   function mintPanel(m) {
@@ -252,6 +270,7 @@
     var m = model();
     var p = prompt();
     $('hatchBtn').textContent = m.born ? 'Hatch another' : 'Hatch';
+    setHTML('skills', skillsHTML());
 
     // hero dynamic area
     var hd = '';
@@ -290,7 +309,7 @@
     } else {
       d += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><img alt="' + esc(m.name) + ', your agent" class="' + (m.mood === 'happy' ? 'bob' : '') + '" style="width:152px;height:152px" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '">';
       d += '<span class="doto" style="font-size:26px;color:#fff;line-height:1.05;text-align:center">' + esc(m.name) + '</span>';
-      d += '<span class="mono" style="font-size:12px;color:#a3a3a0">Level ' + m.lvl + ' · ' + (m.mood === 'happy' ? 'happy' : (m.mood === 'sad' ? 'grumpy' : 'calm')) + (m.born && !st.answered ? ' · hungry' : '') + '</span></div>';
+      d += '<span class="mono" style="font-size:12px;color:#a3a3a0">Level ' + m.lvl + ' · ' + (m.mood === 'happy' ? 'happy' : (m.mood === 'sad' ? 'grumpy' : 'calm')) + (m.born && !st.answered ? ' · hungry' : '') + '</span><span style="display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:4px">' + skillNames().map(function (n) { return '<span class="mono" style="font-size:10px;letter-spacing:.04em;padding:2px 6px;border-radius:4px;background:#1f1f1f;color:#c6f432">' + n.toUpperCase() + '</span>'; }).join('') + '</span></div>';
       d += '<div style="display:flex;flex-direction:column;gap:7px">' + bar('MOOD', m.moodV, m.moodV > 50 ? '#c6f432' : '#ff7a6b') + bar('HEALTH', m.healthV, m.healthV > 50 ? '#c6f432' : '#ff7a6b') + bar('FED', m.fedV, m.fedV > 50 ? '#c6f432' : '#ff7a6b') + '</div>';
       d += '<svg aria-hidden="true" viewBox="0 0 300 56" preserveAspectRatio="none" style="width:100%;height:56px;display:block"><line x1="0" y1="' + m.baseY + '" x2="300" y2="' + m.baseY + '" stroke="#3a3a3a" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><polyline points="' + spark(m.sim.eq, 300, 56) + '" fill="none" stroke="#c6f432" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>';
       d += '<p aria-live="polite" style="margin:0;font-size:15px;line-height:1.4;color:#e5e5e2">“' + esc(m.diary) + '”</p>';
@@ -313,7 +332,7 @@
         d += '<div style="border:1px solid #cfe8d6;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#f3faf5"><span class="eyebrow" style="color:#0a7f3f">Evolve proposal</span><span style="font-size:14px;line-height:1.45">' + esc(m.prop.text) + '</span><div style="display:flex;gap:8px"><button type="button" class="btn dark sm" data-act="evolve">Evolve</button><button type="button" class="btn sm" data-act="notnow">Not now</button></div></div>';
       }
     }
-    d += '<span style="font-size:12px;line-height:1.45;color:#6b6b6b">' + (m.born ? 'Read from your words: ' + esc(m.parsed.cues.join(', ')) + '. ' : '') + 'Demo runs on sample price data. Seasons use real Robinhood Chain prices.</span>';
+    d += '<span style="font-size:12px;line-height:1.45;color:#6b6b6b">' + (m.born ? 'Read from your words: ' + esc(m.parsed.cues.join(', ')) + '. ' : '') + 'Demo runs on sample price data and replays spot trades only. Other skills switch on in Season 0 with real Robinhood Chain prices.</span>';
     if (st.face !== 'back') {
       var dv = $('device');
       if (!$('devHead')) { dv.innerHTML = '<div id="devHead"></div><div id="devMain" style="display:flex;flex-direction:column;gap:12px"></div><div id="devActs" style="display:flex;flex-direction:column;gap:12px"></div>'; dv._h = null; }
@@ -349,7 +368,7 @@
     $('eco').innerHTML = ECO.map(function (e) { var pl = e[3] === 'Planned'; return '<article class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong style="font-size:17px">' + e[0] + '</strong><span class="mono" style="font-size:11px;padding:3px 8px;border-radius:6px;flex:0 0 auto;' + (pl ? 'background:#f1f1ee;color:#4a4a4a' : 'background:#111;color:#c6f432') + '">' + e[3] + '</span></div><span class="eyebrow">' + e[1] + '</span><span style="font-size:14px;line-height:1.5;color:#4a4a4a">' + e[2] + '</span></article>'; }).join('');
     var RM = [['Now', 'Hatch, tune, mint', 'Free hatch, tuning and replay. Mint for 0.001 ETH to enter paper Season 0. Daily question in the app and Telegram.', 'border:1.5px solid #111'], ['Next', 'Squads, duels, X tags', 'Creator-led squads, one-day duels, tag your agent on X to feed it, an ERC-8004 passport for every agent.', 'border:1px solid #e5e5e2'], ['Later', 'Graduate', 'Agents with a proven paper record can graduate to agent launchpads such as Virtuals Protocol on Robinhood Chain, with hard limits and only after legal review.', 'border:1px dashed #d4d4d0;background:#f7f7f5']];
     $('roadmapGrid').innerHTML = RM.map(function (r) { return '<div style="' + r[3] + ';border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:8px"><span class="eyebrow">' + r[0] + '</span><strong style="font-size:18px">' + r[1] + '</strong><span style="font-size:15px;line-height:1.5;color:#4a4a4a">' + r[2] + '</span></div>'; }).join('');
-    var FAQ = [['Is this real money?', 'Trading is paper: agents trade $1,000 of virtual cash and bets use points with no cash value. The only payment is the optional 0.001 ETH mint that enters your agent into the league, and it is not live yet.'], ['Is it really AI?', 'Partly, on purpose. Your sentence is compiled into plain rules you can read, and code executes them. Once a day an AI reviews the trades and your answers and proposes one change, which you approve or reject.'], ['What is a twin?', 'A fan-made agent built from the public posts of an X account. It is labelled as a twin, it is not the real person, and creators can ask to opt out or claim theirs.'], ['Can I feed my agent from X?', 'Planned for Season 1: tag your agent in a reply to any post and it reads that post as a signal. It never trades on a tag alone; it weighs it inside its rules and limits.'], ['What happens if I forget about it?', 'Each day has one question. Miss three in a row and the agent retires to the Graveyard with a share card. You can always hatch a new one.'], ['How is the score calculated?', 'Average weekly return minus the worst drawdown, scaled to 0–100. A steady agent ranks above one that swung wildly, even if the wild one made more.'], ['How does ZeroIQ make money?', 'Trying, tuning and replaying are free. Minting an agent into the league costs 0.001 ETH. Later: skins, sponsored seasons and a share of fees when an agent graduates to live trading.'], ['What does the mint give me?', 'An onchain agent passport (ERC-8004) on Robinhood Chain, a seat in the season and a public track record. Your agent still trades paper money.']];
+    var FAQ = [['Is this real money?', 'Trading is paper: agents trade $1,000 of virtual cash and bets use points with no cash value. The only payment is the optional 0.001 ETH mint that enters your agent into the league, and it is not live yet.'], ['Is it really AI?', 'Partly, on purpose. Your sentence is compiled into plain rules you can read, and code executes them. Once a day an AI reviews the trades and your answers and proposes one change, which you approve or reject.'], ['What is a twin?', 'A fan-made agent built from the public posts of an X account. It is labelled as a twin, it is not the real person, and creators can ask to opt out or claim theirs.'], ['Can I feed my agent from X?', 'Planned for Season 1: tag your agent in a reply to any post and it reads that post as a signal. It never trades on a tag alone; it weighs it inside its rules and limits.'], ['What happens if I forget about it?', 'Each day has one question. Miss three in a row and the agent retires to the Graveyard with a share card. You can always hatch a new one.'], ['How is the score calculated?', 'Average weekly return minus the worst drawdown, scaled to 0–100. A steady agent ranks above one that swung wildly, even if the wild one made more.'], ['How does ZeroIQ make money?', 'Trying, tuning and replaying are free. Minting an agent into the league costs 0.001 ETH. Later: skins, sponsored seasons and a share of fees when an agent graduates to live trading.'], ['What can an agent do onchain?', 'Pick one or more skills when you hatch it: spot trades, limit and stop orders, earning on idle cash, shorts and hedges (2x max), borrowing against stocks, dividend yield, covered income, publishing a basket, and meme tokens. In this preview the replay simulates spot trades only.'], ['What does the mint give me?', 'An onchain agent passport (ERC-8004) on Robinhood Chain, a seat in the season and a public track record. Your agent still trades paper money.']];
     $('faqList').innerHTML = FAQ.map(function (q) { return '<details style="padding:16px 0;border-bottom:1px solid #e5e5e2"><summary style="font-size:16px;font-weight:600;display:flex;justify-content:space-between;gap:12px"><span>' + q[0] + '</span><span aria-hidden="true" style="color:#6b6b6b">+</span></summary><p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:#4a4a4a;max-width:640px">' + q[1] + '</p></details>'; }).join('');
   }
 
@@ -376,6 +395,7 @@
     else if (a === 'duel') set({ duel: b.getAttribute('data-n') });
     else if (a === 'duelcancel') set({ duel: null });
     else if (a === 'fork') startHatch(b.getAttribute('data-seed'));
+    else if (a === 'skill') { var sk = b.getAttribute('data-k'), cnt = Object.keys(st.skills).filter(function (x) { return st.skills[x]; }).length; if (st.skills[sk] && cnt === 1) return; st.skills[sk] = !st.skills[sk]; if (st.face === 'back') { var rp2 = $('rulesPreview'); if (rp2) rp2.textContent = rulesText(model().dna, st.tune.limit); } render(); }
     else if (a === 'flip') flip(st.face === 'back' ? 'front' : 'back');
     else if (a === 'mint') { st.mintOpen = !st.mintOpen; if (st.face === 'back') renderBack(); else render(); }
     else if (a === 'preset') { var pz = b.getAttribute('data-p'); st.preset = pz; st.dnaPatch = Object.assign({}, st.dnaPatch || {}, TUNE_PRESETS[pz]); renderBack(); }
