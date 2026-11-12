@@ -272,6 +272,7 @@ html,body{overflow-x:clip}
 .ghost .dv-screen{filter:saturate(.85)}
 @media (max-width:1320px){.ghost .dv{transform:scale(.72)}.ghost.g1{transform:translateX(-90%) rotate(-7deg)}.ghost.g2{transform:translateX(-12%) rotate(6deg)}}
 @media (max-width:1100px) and (min-width:761px){.ghost.g2{transform:translateX(-30%) rotate(6deg)}.ghost.g1{transform:translateX(-72%) rotate(-7deg)}}
+.dv-body{display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px;transform-origin:50% 50%}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
@@ -338,7 +339,7 @@ html,body{overflow-x:clip}
 </div>
 <div id="heroDevCol" style="flex:1 1 420px;min-width:0;display:flex;justify-content:center;position:relative">
 <div class="ghost g1" aria-hidden="true"></div><div class="ghost g2" aria-hidden="true"></div>
-<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="device" class="dv"></div><div class="dv-port" id="dvPort" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
+<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="devBody" class="dv-body"><div id="device" class="dv"></div><div class="dv-port" id="dvPort" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
 </div>
 </section>
 
@@ -462,6 +463,6 @@ html,body{overflow-x:clip}
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Try your AI trader</a></div>
 
-<script src="app.js?v=25"></script>
+<script src="app.js?v=26"></script>
 </body>
 </html>

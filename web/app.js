@@ -485,23 +485,20 @@
   window.addEventListener('resize', function () { drawCables(); });
   function refresh() { if (st.face === 'back') renderBack(); else render(); }
   function flip(to) {
-    var el = $('device');
-    var port = $('dvPort');
+    var el = $('devBody') || $('device');
     var swap = function () { st.face = to; buildFace(); if (to === 'back') renderBack(); else render(); drawCables(); };
     if (reduce) { swap(); return; }
     var dg = to === 'back' ? 90 : -90;
     followCables(560);
     el.style.transition = 'transform .25s ease-in';
     el.style.transform = 'perspective(1400px) rotateY(' + dg + 'deg)';
-    if (port) { port.style.transition = el.style.transition; port.style.transform = 'perspective(1400px) rotateY(' + dg + 'deg)'; }
     setTimeout(function () {
       swap();
       el.style.transition = 'none';
-      el.style.transform = 'perspective(1400px) rotateY(' + (dg) + 'deg)';
+      el.style.transform = 'perspective(1400px) rotateY(' + dg + 'deg)';
       void el.offsetWidth;
       el.style.transition = 'transform .25s ease-out';
       el.style.transform = 'perspective(1400px) rotateY(0deg)';
-      if (port) { port.style.transition = 'none'; port.style.transform = 'perspective(1400px) rotateY(' + (dg) + 'deg)'; void port.offsetWidth; port.style.transition = 'transform .25s ease-out'; port.style.transform = 'perspective(1400px) rotateY(0deg)'; }
     }, 250);
   }
 
