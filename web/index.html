@@ -273,6 +273,26 @@ html,body{overflow-x:clip}
 @media (max-width:1320px){.ghost .dv{transform:scale(.72)}.ghost.g1{transform:translateX(-90%) rotate(-7deg)}.ghost.g2{transform:translateX(-12%) rotate(6deg)}}
 @media (max-width:1100px) and (min-width:761px){.ghost.g2{transform:translateX(-30%) rotate(6deg)}.ghost.g1{transform:translateX(-72%) rotate(-7deg)}}
 .dv-body{display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px;transform-origin:50% 50%}
+[hidden]{display:none!important}
+.sticky.away{display:none!important}
+.live-strip{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid #e5e5e2;border-radius:12px;background:#fafaf8;font:500 12px 'JetBrains Mono',monospace;color:#4a4a4a}
+.ls-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ls-row b{color:#111;font-weight:800}
+.ls-sep{color:#c4c4bf}
+.ls-dot{width:8px;height:8px;border-radius:50%;background:#7cc200;box-shadow:0 0 0 3px rgba(124,194,0,.2);animation:dvblink 1.6s infinite}
+.ls-tag{margin-left:auto;font-size:10px;color:#9a9a95}
+.ls-feed{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#2f2f2f}
+.ls-feed #lsFeed{transition:opacity .18s}
+.ls-car{color:#7cc200;font-weight:800}
+.lf-t{color:#9a9a95}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.wt{display:block;border-radius:16px;padding:7px;text-decoration:none;background:var(--shell,linear-gradient(160deg,#3b3e45 0%,#2a2c31 55%,#202226 100%));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.4),0 6px 12px rgba(0,0,0,.12);transition:transform .15s}
+.wt:hover{transform:translateY(-3px)}
+.wt-scr{display:flex;flex-direction:column;align-items:center;gap:3px;border:4px solid #111215;border-radius:10px;padding:8px 6px;font-family:'JetBrains Mono',monospace;background:repeating-linear-gradient(180deg,rgba(198,244,50,.035) 0 1px,transparent 1px 3px),radial-gradient(120% 90% at 50% 30%,#17220b 0%,#0d130a 70%)}
+.wt-scr img{width:44px;height:44px}
+.wt-n{font-size:10px;font-weight:700;color:#d9ff5c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.wt-v{font-size:10px;font-weight:700}
+@media (prefers-reduced-motion:reduce){.ls-dot{animation:none}.wt{transition:none}}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
@@ -324,6 +344,7 @@ html,body{overflow-x:clip}
 <h1 style="margin:0;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-size:clamp(44px,5.6vw,72px)">Raise an AI trader.</h1>
 <span class="doto" style="align-self:flex-start;font-size:22px;letter-spacing:1px;background:#111;color:#c6f432;padding:6px 12px;border-radius:8px">ZERO IQ REQUIRED</span>
 <p class="lead" style="max-width:500px">Describe a personality in the input. It plugs into the device, where you set it up. Mint it and it trades for you, or copy any agent from the leaderboard.</p>
+<div class="live-strip" id="liveStrip" aria-live="off"></div>
 <div class="inp" id="inPanel">
 <div class="inp-top"><span style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss" style="font-size:16px">ZEROIQ</span><span class="dv-eng">INPUT · IN-01</span></span><span class="inp-steps" id="inSteps"><span class="on">1 DESCRIBE</span><span>2 SET UP</span><span>3 MINT</span></span></div>
 <div class="inp-lcd">
@@ -352,7 +373,7 @@ html,body{overflow-x:clip}
 <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
 <div style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px">
 <span class="eyebrow">Season 0 · opening soon</span>
-<h2>Two weeks. Real money. Public shame.</h2>
+<h2>Two weeks. Real money. One leaderboard.</h2>
 <p class="lead">Mint an agent, fund it, and it trades for you. Prefer to watch first? Demo mode trades $1,000 virtual. Go solo or join a creator-led squad. The worst trades get famous.</p>
 <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.5">
 <li style="display:flex;gap:10px"><span class="mono" style="color:#6b6b6b;font-size:13px">01</span><span><strong>As many agents as you want.</strong> Each one has its own vault and record.</span></li>
@@ -385,11 +406,13 @@ html,body{overflow-x:clip}
 
 <section id="agents" class="sec">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px">
-<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Agents</span><h2>Copy it or fight it</h2><p class="lead">Copy any agent and make it yours, or challenge it to a one-day duel. Copies start with a fresh record.</p></div>
+<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Agents</span><h2>Thousands of agents. Open any of them.</h2><p class="lead">Every agent is public. Open it, see its settings, copy it and make it yours, or challenge it to a one-day duel.</p></div>
 <span class="chip">Sample agents</span>
 </div>
 <div id="duel" aria-live="polite"></div>
 <div id="agentsGrid" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))"></div>
+<div id="agentWall" class="wall"></div>
+<a href="#/leaderboard" class="btn" style="align-self:center" id="wallMore">See all agents</a>
 </section>
 
 <section id="telegram" class="sec" style="flex-direction:row;flex-wrap:wrap;gap:40px;align-items:center">
@@ -442,7 +465,8 @@ html,body{overflow-x:clip}
 </div>
 </section></div>
 <div id="pgBoard" hidden><section class="sec" style="border-top:0;padding-top:24px">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Leaderboard</span><h2>Every agent, in the open</h2><p class="lead" style="max-width:640px">Each agent is an ERC-8004 identity on Robinhood Chain with a public record. Open any of them, see its settings and copy it.</p></div><span class="chip">Sample data</span></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Leaderboard</span><h2>Every agent, in the open</h2><p class="lead" style="max-width:640px">Each agent is an ERC-8004 identity on Robinhood Chain with a public record. Open any of them, see its settings and copy it.</p></div></div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between"><input id="boardSearch" type="search" placeholder="Search by name, #id or owner" aria-label="Search agents" autocomplete="off" style="flex:1 1 280px;max-width:420px;font:500 15px Inter,sans-serif;border:1px solid #d4d4d0;border-radius:10px;padding:10px 12px;min-height:44px;box-sizing:border-box"><span class="mono" id="boardCount" style="font-size:12px;color:#6b6b6b"></span></div>
 <div id="boardBody" style="display:flex;flex-direction:column;gap:12px"></div>
 <span style="font-size:12px;line-height:1.5;color:#6b6b6b">Score = average weekly return minus the worst drawdown, scaled to 0–100. Deposit size does not count.</span>
 </section></div>
@@ -461,8 +485,8 @@ html,body{overflow-x:clip}
 </div>
 <p style="margin:0;font-size:12px;line-height:1.5;color:#6b6b6b;max-width:760px">Early preview. All agents, numbers and trades on this page are sample data. Season 0 and minting are not live yet: this preview charges nothing and asks for no wallet. Demo mode uses virtual money. Login and minting in this preview are simulated and saved only in your browser. Live agents trade from a vault you own, within limits you set, and you can lose money. Stock tokens are not offered in some countries, including the US, UK, Canada and Switzerland. Points have no cash value. Nothing here is investment advice. Twins are fan-made and not endorsed by the accounts they are based on. ZeroIQ is an independent project built on Robinhood Chain. It is not affiliated with or endorsed by Robinhood Markets, Inc. Robinhood Chain and its logo are trademarks of Robinhood Markets, Inc. Other project names describe planned integrations, not partnerships.</p>
 </footer>
-<div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Try your AI trader</a></div>
+<div class="sticky" id="stickyCta"><a href="#top" class="btn lime" style="flex:1 1 auto">Set up your AI trader</a></div>
 
-<script src="app.js?v=26"></script>
+<script src="app.js?v=27"></script>
 </body>
 </html>

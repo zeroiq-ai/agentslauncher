@@ -294,6 +294,12 @@
     for (var i = 0; i < 12; i++) b += '<span style="background:' + (i < n ? (warn ? '#ff7a6b' : '#c6f432') : '#1d2810') + '"></span>';
     return '<div class="scr-meter" title="' + hint + '"><span class="scr-ml">' + l + '</span><span class="scr-blocks" role="meter" aria-label="' + l + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + v + '">' + b + '</span><span class="scr-mv">' + label + '</span></div>';
   }
+  var wrCache = {};
+  function winRate4(dna) {
+    var k = [dna.patience, dna.fomo, dna.risk, dna.freq, dna.style].join('|'); if (wrCache[k] !== undefined) return wrCache[k];
+    var w = 0, n = 0; [0, 1, 2, 3].forEach(function (si) { var tr = simulate(prices(si), dna), buy = null; tr.forEach(function (t) { if (t.act === 'BUY') buy = t.price; else if (buy !== null) { n++; if (t.price > buy) w++; buy = null; } }); });
+    return (wrCache[k] = n ? Math.round(w / n * 100) : null);
+  }
   function winRate(trades) {
     var w = 0, n = 0, buy = null;
     trades.forEach(function (t) { if (t.act === 'BUY') buy = t.price; else if (buy !== null) { n++; if (t.price > buy) w++; buy = null; } });
@@ -341,7 +347,7 @@
       });
       s += '</div></div>';
     } else {
-      var wr = winRate(m.trades), risk = Math.min(100, Math.round(m.sim.dd * 100 / st.tune.limit * 100));
+      var wr = winRate4(m.dna), risk = Math.min(100, Math.round(m.sim.dd * 100 / st.tune.limit * 100));
       var sk = skillNames().length ? SKILLS.filter(function (k) { return st.skills[k[0]]; }).map(function (k) { return SK_SHORT[k[0]]; }).join(' + ') : '';
       s += '<div style="display:flex;gap:14px;align-items:center"><img alt="' + esc(m.name) + ', your agent" class="' + (m.mood === 'happy' ? 'bob' : '') + '" style="width:96px;height:96px;flex:0 0 auto" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '">';
       s += '<div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 auto"><span class="doto scr-name">' + esc(m.name) + '</span><span class="scr-sub">LV ' + m.lvl + ' · ' + (m.mood === 'happy' ? 'HAPPY' : (m.mood === 'sad' ? 'GRUMPY' : 'CALM')) + '' + ' · ' + sk + '</span>';
@@ -544,25 +550,27 @@
   }
 
   function renderStatic() {
-    var T = [['DUMBEST', 'Hype Oracle bought TSLA at the top', '−6.8%', '#ff7a6b'], ['HATCHED', 'Zen Goblin, “buy the dip, stay calm”', 'Lv 1', '#fff'], ['COPIED', 'Degen Hamster copied by 263 traders', '', '#fff'], ['EVOLVED', 'Calm Hamster raised patience 60 → 72', 'Lv 5', '#fff'], ['DUEL', 'Lucky Robot beat Feral Gremlin', '+2.1%', '#c6f432'], ['SAMPLE', 'all data on this page is sample data', '', '#fff']];
+    var T = [['DUMBEST', 'Hype Oracle bought TSLA at the top', '−6.8%', '#ff7a6b'], ['SPAWNED', 'Zen Goblin, “buy the dip, stay calm”', '', '#fff'], ['COPIED', 'Degen Hamster copied by 263 traders', '', '#fff'], ['EVOLVED', 'Calm Hamster raised patience 60 → 72', 'Lv 5', '#fff'], ['DUEL', 'Lucky Robot beat Feral Gremlin', '+2.1%', '#c6f432'], ['SAMPLE', 'all data on this page is sample data', '', '#fff']];
     var tk = T.concat(T).map(function (t) { return '<span><span style="color:#c6f432">' + t[0] + '</span> ' + t[1] + ' <span style="color:' + t[3] + '">' + t[2] + '</span></span>'; }).join('');
     $('ticker').innerHTML = tk;
     var art = [
       '<div class="stp-lcd"><span>› make me rich, make no mistakes<b class="blink">▍</b></span><span class="dim">compiling rules…</span><span>BUY after 2 green · size 80%</span><span>SELL +3.1% / −4.0%</span></div>',
       '<div class="stp-lcd"><span class="dim">EQUITY · 7D · SAMPLE</span><svg viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:48px"><polyline points="0,40 20,36 40,38 60,30 80,32 100,22 120,26 140,18 160,20 180,10 200,12" fill="none" stroke="#c6f432" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><span><b class="scr-mk b" style="position:static;transform:none">B</b> NVDA $112.90 → <b class="scr-mk s" style="position:static;transform:none">S</b> $117.07 · +3.7%</span></div>',
       '<div class="stp-lcd"><span class="pg-h" style="display:flex;justify-content:space-between"><span>✉ PAGER · EVENT</span><span>1 NEW</span></span><span>NVDA reports tomorrow. Trade the move with half size?</span><span style="display:flex;gap:6px"><b class="pg-mini yes">+</b><b class="pg-mini">−</b></span></div>'];
-    var steps = [['01', 'Describe it or tune it', 'One sentence, an @handle to copy a CT account, or the faders on the back. It becomes rules you can read.'], ['02', 'Watch it trade', 'Press Try it and it backtests last week in seconds: every buy, every sell and its excuse. Tune it until you like it.'], ['03', 'Mint it, copy one, or both', 'Mint it and it trades for you. It pages you when it spots something: earnings, a new meme, a setting you skipped. Plus or minus.']];
+    var steps = [['01', 'Describe it or tune it', 'One sentence, an @handle to copy a CT account, or the faders on the back. It becomes rules you can read.'], ['02', 'Set it up', 'Press SET UP and the device flips to its control panel: faders, markets, signals. SIMULATE plays last week in black and white.'], ['03', 'Mint it, copy one, or both', 'Mint it and it trades for you. It pages you when it spots something: earnings, a new meme, a setting you skipped. Plus or minus.']];
     $('steps').innerHTML = steps.map(function (s, i) { return '<article class="card" style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">' + art[i] + '<span class="doto" style="font-size:28px;color:#d4d4d0">' + s[0] + '</span></div><strong style="font-size:20px">' + s[1] + '</strong><span style="font-size:15px;line-height:1.5;color:#4a4a4a">' + s[2] + '</span></article>'; }).join('');
     $('board').innerHTML = PUB.slice().sort(function (a, b) { return b.score - a.score; }).slice(0, 5).map(function (s, i) {
       return '<a href="#/agent/' + s.id + '" class="row mono" style="padding:10px 0;border-bottom:1px solid #f1f1ee;font-size:13px;text-decoration:none;color:#111"><span style="color:#6b6b6b">' + (i + 1) + '</span><img alt="" style="width:36px;height:36px;background:#0f0f0f;border-radius:8px" src="' + robot(s.prompt, { preset: s.preset, stage: 3, mood: s.avg >= 0 ? 'happy' : 'sad' }) + '"><span style="display:flex;flex-direction:column;min-width:0"><strong style="font:600 15px Inter,sans-serif">' + esc(s.name) + '</strong><span style="color:#6b6b6b;font-size:12px">8004 #' + s.id + ' · ' + s.copiers + ' copiers</span></span><span class="hide-sm" style="text-align:right;color:' + (s.avg >= 0 ? UP : DOWN) + '">' + fmt(s.avg) + '</span><span class="hide-sm" style="text-align:right;color:#4a4a4a">' + s.dd.toFixed(1) + '%</span><span style="text-align:right;font-weight:700">' + s.score.toFixed(0) + '</span></a>';
     }).join('');
     $('agentsGrid').innerHTML = [PUB[7], PUB[0], PUB[5], PUB[2]].map(function (a) { return miniCard(a, a.tint); }).join('');
+    $('agentWall').innerHTML = PUB.slice(12, 42).map(function (a) { return '<a class="wt t' + a.tint + '" href="#/agent/' + a.id + '" title="' + esc(a.name) + ' · 8004 #' + a.id + '"><span class="wt-scr"><img alt="" src="' + robot(a.prompt, { preset: a.preset, stage: 2 + (a.id % 2), mood: a.avg >= 0 ? 'happy' : 'sad' }) + '"><span class="wt-n">' + esc(a.name) + '</span><span class="wt-v" style="color:' + (a.avg >= 0 ? '#c6f432' : '#ff7a6b') + '">' + fmt(a.avg) + '</span></span></a>'; }).join('');
+    $('wallMore').textContent = 'See all ' + LIVE.agents.toLocaleString('en-US') + ' agents';
     $('dumbImg').src = robot('Hype Oracle', { preset: 1, stage: 2, mood: 'sad' });
-    var ECO = [['Virtuals Protocol', 'Graduate', 'Agents with a proven onchain record launch as tokenized agents that others can back.', 'Planned'], ['Bankr', 'Act from X', 'Tag your agent on X with a command, Bankr-style. Later: hand a graduated agent to a Bankr wallet.', 'Planned'], ['ERC-8004', 'Agent passport', 'Every agent gets an onchain identity and a portable track record other arenas can read.', 'Planned'], ['Telegram', 'Daily question', 'Feed your agent from a chat without opening the site.', 'Season 0'], ['X', 'Share cards + tags', 'Births, deaths and duels ready to post. Tag your agent with a post to feed it.', 'Season 0'], ['Dune', 'Public logs', 'A dashboard where anyone can audit every agent decision.', 'Planned']];
+    var ECO = [['Virtuals Protocol', 'Graduate', 'Agents with a proven onchain record launch as tokenized agents that others can back.', 'Planned'], ['Bankr', 'Act from X', 'Tag your agent on X with a command, Bankr-style. Later: hand a graduated agent to a Bankr wallet.', 'Planned'], ['ERC-8004', 'Agent passport', 'Every agent gets an onchain identity and a portable track record other arenas can read.', 'Planned'], ['Telegram', 'Pager', 'Your agents page you in Telegram. Answer with plus or minus.', 'Season 0'], ['X', 'Share cards + tags', 'Agent cards, big wins and duels ready to post. Tag your agent in a post to send it a signal.', 'Season 0'], ['Dune', 'Public logs', 'A dashboard where anyone can audit every agent decision.', 'Planned']];
     $('eco').innerHTML = ECO.map(function (e) { var pl = e[3] === 'Planned'; return '<article class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong style="font-size:17px">' + e[0] + '</strong><span class="mono" style="font-size:11px;padding:3px 8px;border-radius:6px;flex:0 0 auto;' + (pl ? 'background:#f1f1ee;color:#4a4a4a' : 'background:#111;color:#c6f432') + '">' + e[3] + '</span></div><span class="eyebrow">' + e[1] + '</span><span style="font-size:14px;line-height:1.5;color:#4a4a4a">' + e[2] + '</span></article>'; }).join('');
     var RM = [['Now', 'Create, copy, go live', 'Try any idea free. Mint an agent for 0.001 ETH, fund its vault and it trades stock tokens on Robinhood Chain within your limits, or run it in demo mode. Copy any agent from the leaderboard.', 'border:1.5px solid #111'], ['Next', 'Squads, duels, X tags', 'Creator-led squads, one-day duels, tag your agent on X to feed it, an ERC-8004 passport for every agent.', 'border:1px solid #e5e5e2'], ['Later', 'Graduate', 'Agents with a proven record can graduate to agent launchpads such as Virtuals Protocol on Robinhood Chain, with hard limits and only after legal review.', 'border:1px dashed #d4d4d0;background:#f7f7f5']];
     $('roadmapGrid').innerHTML = RM.map(function (r) { return '<div style="' + r[3] + ';border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:8px"><span class="eyebrow">' + r[0] + '</span><strong style="font-size:18px">' + r[1] + '</strong><span style="font-size:15px;line-height:1.5;color:#4a4a4a">' + r[2] + '</span></div>'; }).join('');
-    var FAQ = [['Is this real money?', 'From Season 0, yes. You mint an agent for 0.001 ETH and fund its vault with USDG. The vault is a smart account you own: the agent can only trade inside the limits you set, and you can withdraw any time. You can lose money. Want to watch first? Switch on demo mode in its settings and it trades $1,000 of virtual cash instead. Season 0 is not live yet.'], ['Can I copy someone else’s agent?', 'Yes. Every agent on the leaderboard is an ERC-8004 identity with a public record. Open it, pick copy everything or mirror trades only, choose your size and loss limit, then edit whatever you like. Settings the owner keeps private start in the middle.'], ['How many agents can I have?', 'As many as you want. Each one is its own mint, vault and record.'],  ['Who can play with real money?', 'Stock tokens on Robinhood Chain are not offered in some countries, including the US, UK, Canada and Switzerland. Real-money play follows the same rules, so it is blocked there.'], ['Is it really AI?', 'Partly, on purpose. Your sentence is compiled into plain rules you can read, and code executes them. Once a day an AI reviews the trades and your answers and proposes one change, which you approve or reject.'], ['What is a twin?', 'A fan-made agent built from the public posts of an X account. It is labelled as a twin, it is not the real person, and creators can ask to opt out or claim theirs.'], ['Can I feed my agent from X?', 'Planned for Season 1: tag your agent in a reply to any post and it reads that post as a signal. It never trades on a tag alone; it weighs it inside its rules and limits.'], ['What happens if I forget about it?', 'Nothing bad. It keeps trading inside your limits. The daily question only helps it learn your style, so skipping it means it learns slower. Your money stays in your vault.'], ['How is the score calculated?', 'Average weekly return minus the worst drawdown, scaled to 0–100. A steady agent ranks above one that swung wildly, even if the wild one made more.'], ['How does ZeroIQ make money?', 'Hatching, tuning and the trial run are free. Minting an agent costs 0.001 ETH. Later: skins, sponsored seasons and a small share of trading fees.'], ['What can an agent do onchain?', 'Pick one or more skills when you hatch it: spot trades, limit and stop orders, earning on idle cash, shorts and hedges (2x max), borrowing against stocks, dividend yield, covered income, publishing a basket, and meme tokens. In this preview the replay simulates spot trades only.'], ['What does the mint give me?', 'An onchain agent passport (ERC-8004) on Robinhood Chain, its own vault and a public track record. The vault stays yours: the agent gets a key that can only trade, never withdraw.']];
+    var FAQ = [['Is this real money?', 'From Season 0, yes. You mint an agent for 0.001 ETH and fund its vault with USDG. The vault is a smart account you own: the agent can only trade inside the limits you set, and you can withdraw any time. You can lose money. Want to watch first? Switch on demo mode in its settings and it trades $1,000 of virtual cash instead. Season 0 is not live yet.'], ['Can I copy someone else’s agent?', 'Yes. Every agent on the leaderboard is an ERC-8004 identity with a public record. Open it, pick copy everything or mirror trades only, choose your size and loss limit, then edit whatever you like. Settings the owner keeps private start in the middle.'], ['How many agents can I have?', 'As many as you want. Each one is its own mint, vault and record.'],  ['Who can play with real money?', 'Stock tokens on Robinhood Chain are not offered in some countries, including the US, UK, Canada and Switzerland. Real-money play follows the same rules, so it is blocked there.'], ['Is it really AI?', 'Partly, on purpose. Your sentence is compiled into plain rules you can read, and code executes them. Once a day an AI reviews the trades and your answers and proposes one change, which you approve or reject.'], ['What is a twin?', 'A fan-made agent built from the public posts of an X account. It is labelled as a twin, it is not the real person, and creators can ask to opt out or claim theirs.'], ['Can my agent read X?', 'Planned for Season 1: tag your agent in a reply to any post and it reads that post as a signal. It never trades on a tag alone; it weighs it inside its rules and limits.'], ['What happens if I forget about it?', 'Nothing bad. It keeps trading inside your limits. The daily question only helps it learn your style, so skipping it means it learns slower. Your money stays in your vault.'], ['How is the score calculated?', 'Average weekly return minus the worst drawdown, scaled to 0–100. A steady agent ranks above one that swung wildly, even if the wild one made more.'], ['How does ZeroIQ make money?', 'Hatching, tuning and the trial run are free. Minting an agent costs 0.001 ETH. Later: skins, sponsored seasons and a small share of trading fees.'], ['What can an agent do onchain?', 'Pick one or more skills when you hatch it: spot trades, limit and stop orders, earning on idle cash, shorts and hedges (2x max), borrowing against stocks, dividend yield, covered income, publishing a basket, and meme tokens. In this preview the replay simulates spot trades only.'], ['What does the mint give me?', 'An onchain agent passport (ERC-8004) on Robinhood Chain, its own vault and a public track record. The vault stays yours: the agent gets a key that can only trade, never withdraw.']];
     $('faqList').innerHTML = FAQ.map(function (q) { return '<details style="padding:16px 0;border-bottom:1px solid #e5e5e2"><summary style="font-size:16px;font-weight:600;display:flex;justify-content:space-between;gap:12px"><span>' + q[0] + '</span><span aria-hidden="true" style="color:#6b6b6b">+</span></summary><p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:#4a4a4a;max-width:640px">' + q[1] + '</p></details>'; }).join('');
   }
 
@@ -685,7 +693,8 @@
     else if (a === 'hot') { toggleHot(b.getAttribute('data-k')); render(); if (st.face === 'back') renderBack(); }
     else if (a === 'tf') { st.tf = b.getAttribute('data-v'); render(); }
     else if (a === 'pyes' || a === 'pno') { applyPager(b.getAttribute('data-id'), a === 'pyes'); refresh(); }
-    else if (a === 'bfilter') { boardFilter = b.getAttribute('data-v'); renderBoard(); }
+    else if (a === 'bfilter') { boardFilter = b.getAttribute('data-v'); boardLimit = 25; renderBoard(); }
+    else if (a === 'bmore') { boardLimit += 25; renderBoard(); }
     else if (a === 'join' || a === 'save') { if (a === 'save' && !m.born) return; e.preventDefault(); st.mintOpen = false; st.shareOpen = false; st.joined = true; st.saveOpen = st.face !== 'back'; refresh(); if (st.face === 'back') render(); }
     else if (a === 'hold') set({ answered: 'hold', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { patience: Math.min(99, m.dna.patience + 5) }) });
     else if (a === 'sell') set({ answered: 'sell', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { risk: Math.max(0, m.dna.risk - 10) }) });
@@ -799,6 +808,22 @@
     return '<div class="scr-chart">' + head + '<div class="scr-ch-body">' + svg + mk + yl + '</div><div class="scr-ch-x">' + xl + '</div><div class="scr-ch-leg"><span><i style="background:#c6f432"></i>equity</span><span><i style="background:#3f5c14"></i>' + s.ticker + ' price</span><span><b class="scr-mk b" style="position:static;transform:none">B</b> buy</span><span><b class="scr-mk s" style="position:static;transform:none">S</b> sell</span></div></div>';
   }
 
+  // ---------- live counters + feed (sample until the backend is live) ----------
+  var LIVE = { agents: 12408, live: 3112, hour: 214, feedI: 0 };
+  function liveFeedItem(i) {
+    var a = PUB[(i * 7) % PUB.length], b = PUB[(i * 13 + 5) % PUB.length], k = i % 6, t = (i % 9) + 2;
+    var txt = [esc(a.name) + ' spawned · “' + esc(a.prompt.length > 30 ? a.prompt.slice(0, 28).replace(/[\s,]+$/, '') + '…' : a.prompt) + '”', esc(b.name) + ' copied by 0x' + (1000 + i * 37 % 9000).toString(16) + '…', esc(a.name) + ' closed NVDA ' + fmt(1 + (i % 5) * 0.7), esc(b.name) + ' went live · vault $' + (50 + i % 20 * 25), esc(a.name) + ' paged its owner: earnings tomorrow', esc(b.name) + ' entered top 10'][k];
+    return '<span class="lf-t">' + t + 's ago</span> ' + txt;
+  }
+  function renderLive() {
+    var el = $('liveStrip'); if (!el) return;
+    el.innerHTML = '<div class="ls-row"><span class="ls-dot"></span><b>' + LIVE.agents.toLocaleString('en-US') + '</b> agents<span class="ls-sep">·</span><b>' + LIVE.live.toLocaleString('en-US') + '</b> live<span class="ls-sep">·</span><b>' + LIVE.hour + '</b> spawned this hour<span class="ls-tag">sample</span></div><div class="ls-feed"><span class="ls-car">›</span> <span id="lsFeed">' + liveFeedItem(LIVE.feedI) + '</span></div>';
+  }
+  function tickLive() {
+    LIVE.feedI++; if (LIVE.feedI % 2 === 0) { LIVE.agents += 1 + (LIVE.feedI % 3); LIVE.hour += 1; } if (LIVE.feedI % 5 === 0) LIVE.live += 1;
+    var f = $('lsFeed'); if (f) { f.style.opacity = 0; setTimeout(function () { renderLive(); }, 180); } else renderLive();
+  }
+
   // ---------- device tints ----------
   var TINTS = ['Graphite', 'Lime', 'Arctic', 'Ocean', 'Walnut', 'Bubblegum', 'Sunset', 'Smoke'];
   function tintOf(a) { return a ? (a.tint !== undefined ? a.tint : a.id % 8) : 0; }
@@ -887,8 +912,27 @@
   ].map(function (a, i) {
     var p = parse(a[1]).dna, st0 = agentStats(p);
     return { id: 4108 + i * 37, name: a[0], prompt: a[1], preset: a[2], hidden: mkSkills(a[3]), promptPublic: a[3].length < 5, skills: mkSkills(a[4]), watch: mkWatch(a[5]), limit: a[6], copiers: a[7],
-      dna: Object.assign({}, p), lean: p.style === 'momentum' ? 72 : 28, conn: {}, handles: [], owner: fakeAddr(a[0]), tint: (i * 3 + 1) % 8, mode: 'live', avg: st0.avg, dd: st0.dd, score: st0.score, all: st0.all, pub: true };
+      dna: Object.assign({}, p), lean: p.style === 'momentum' ? 72 : 28, conn: {}, handles: [], owner: fakeAddr(a[0]), xp: Math.min(110, 30 + Math.round(a[7] / 3)), tint: (i * 3 + 1) % 8, mode: 'live', avg: st0.avg, dd: st0.dd, score: st0.score, all: st0.all, pub: true };
   });
+  (function () {
+    var seed = 9173, rnd = function () { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    var A1 = ['Tiny', 'Lucky', 'Quiet', 'Sleepy', 'Feral', 'Shy', 'Zen', 'Hype', 'Degen', 'Calm', 'Turbo', 'Grumpy', 'Sneaky', 'Brave', 'Lazy', 'Neon', 'Rusty', 'Cosmic'];
+    var A2 = ['Goblin', 'Oracle', 'Intern', 'Hamster', 'Gremlin', 'Robot', 'Badger', 'Monk', 'Raccoon', 'Wizard', 'Penguin', 'Ape', 'Owl', 'Golem', 'Ferret', 'Pilot'];
+    var PR = EXAMPLES.concat(['buy NVDA on red days, hold a week', 'scalp TSLA, tiny size', 'only trade after earnings', 'AI basket, rebalance weekly', 'follow the top 3 agents, half size', 'trade memes on weekends only', 'never more than 2 trades a day', 'buy breakouts on volume']);
+    var SK = ['orders', 'earn', 'perps', 'basket', 'memes', 'dividends'], HK = ['patience', 'fomo', 'risk', 'freq', 'lean', 'limit'], used = {};
+    PUB.forEach(function (a) { used[a.name] = 1; });
+    for (var i = PUB.length; i < 100; i++) {
+      var nm; do { nm = A1[Math.floor(rnd() * A1.length)] + ' ' + A2[Math.floor(rnd() * A2.length)]; } while (used[nm]); used[nm] = 1;
+      var pr = PR[Math.floor(rnd() * PR.length)], p = parse(pr).dna, j = function (v) { return Math.max(0, Math.min(99, Math.round(v + (rnd() - 0.5) * 40))); };
+      var dna = { patience: j(p.patience), fomo: j(p.fomo), risk: j(p.risk), freq: j(p.freq), style: rnd() < 0.5 ? 'dip' : 'momentum' }, st0 = agentStats(dna);
+      var hid = {}; HK.forEach(function (k) { if (rnd() < 0.18) hid[k] = true; });
+      var sk = { spot: true }; SK.forEach(function (k) { if (rnd() < 0.25) sk[k] = true; });
+      var w = mkWatch(WATCH0.filter(function () { return rnd() < 0.45; }).concat(['NVDA']));
+      var cop = Math.floor(Math.pow(rnd(), 3) * 300);
+      PUB.push({ id: 4108 + i * 37, name: nm, prompt: pr, preset: Math.floor(rnd() * 8), hidden: hid, promptPublic: rnd() < 0.7, skills: sk, watch: w, limit: 5 + Math.floor(rnd() * 15), copiers: cop,
+        dna: dna, lean: dna.style === 'momentum' ? 72 : 28, conn: {}, handles: [], owner: fakeAddr(nm), xp: Math.min(110, Math.floor(rnd() * 90)), tint: Math.floor(rnd() * 8), mode: 'live', avg: st0.avg, dd: st0.dd, score: st0.score, all: st0.all, pub: true, isNew: rnd() < 0.12 });
+    }
+  })();
   function findAgent(id) { id = +id; var a = null; ME.agents.forEach(function (x) { if (x.id === id) a = x; }); PUB.forEach(function (x) { if (x.id === id) a = x; }); return a; }
   function isMine(a) { return a && !a.pub; }
 
@@ -1035,18 +1079,24 @@
       '<label style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font-size:14px"><span>Your loss limit per day</span><strong class="mono" id="cs-maxLoss-' + scope + '">−' + c.maxLoss + '%</strong></span><input type="range" min="3" max="20" value="' + c.maxLoss + '" data-copy="maxLoss" data-scope="' + scope + '" style="accent-color:#ff7a6b"></label>';
   }
   function boardRows() { return PUB.concat(ME.agents.filter(function () { return !!ME.user; })).slice().sort(function (x, y) { return y.score - x.score; }); }
-  var boardFilter = 'all';
+  var boardFilter = 'all', boardQuery = '', boardLimit = 25;
   function renderBoard() {
-    var rows = boardRows().filter(function (a) { return boardFilter === 'all' || (boardFilter === 'public' ? !Object.keys(a.hidden || {}).length : a.copiers > 50); });
-    var tabs = [['all', 'All agents'], ['public', 'Fully public settings'], ['copied', 'Most copied']].map(function (t) { var on = boardFilter === t[0]; return '<button type="button" data-act="bfilter" data-v="' + t[0] + '" aria-pressed="' + on + '" class="btn sm" style="' + (on ? 'background:#111;color:#fff;border-color:#111' : '') + '">' + t[1] + '</button>'; }).join('');
+    var all = boardRows(), rank = {}; all.forEach(function (a, i) { rank[a.id] = i + 1; });
+    var qq = boardQuery.trim().toLowerCase().replace(/^#/, '');
+    var rows = all.filter(function (a) { return boardFilter === 'all' || (boardFilter === 'public' ? !Object.keys(a.hidden || {}).length : (boardFilter === 'new' ? a.isNew : a.copiers > 50)); }).filter(function (a) { return !qq || a.name.toLowerCase().indexOf(qq) >= 0 || String(a.id).indexOf(qq) >= 0 || a.owner.indexOf(qq) >= 0; });
+    var total = rows.length; rows = rows.slice(0, boardLimit);
+    var tabs = [['all', 'All agents'], ['copied', 'Most copied'], ['new', 'New today'], ['public', 'Fully public']].map(function (t) { var on = boardFilter === t[0]; return '<button type="button" data-act="bfilter" data-v="' + t[0] + '" aria-pressed="' + on + '" class="btn sm" style="' + (on ? 'background:#111;color:#fff;border-color:#111' : '') + '">' + t[1] + '</button>'; }).join('');
     var h = '<div style="display:flex;flex-wrap:wrap;gap:8px">' + tabs + '</div><div class="card" style="gap:0;padding:8px 16px;overflow-x:auto"><div class="mono lb-row" style="font-size:10px;letter-spacing:.06em;color:#6b6b6b;border-bottom:1px solid #e5e5e2"><span>#</span><span>AGENT</span><span class="hide-sm">OWNER</span><span style="text-align:right">AVG / WK</span><span class="hide-sm" style="text-align:right">MAX DD</span><span style="text-align:right">SCORE</span><span class="hide-sm" style="text-align:right">COPIERS</span><span class="hide-sm">SETTINGS</span><span></span></div>';
     rows.forEach(function (a, i) {
       var hid = Object.keys(a.hidden || {}).length, mine = isMine(a);
-      h += '<div class="lb-row" style="border-bottom:1px solid #f1f1ee;font-size:14px"><span class="mono" style="color:#6b6b6b">' + (i + 1) + '</span><a href="#/agent/' + a.id + '" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#111;min-width:0"><img alt="" src="' + robot(a.prompt, { preset: a.preset, stage: 3, mood: a.avg >= 0 ? 'happy' : 'sad' }) + '" style="width:36px;height:36px;background:#0f0f0f;border-radius:8px;flex:0 0 auto"><span style="display:flex;flex-direction:column;min-width:0"><strong style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(a.name) + (mine ? ' ' + badge('YOU', true) : '') + '</strong><span class="mono" style="font-size:11px;color:#6b6b6b">8004 #' + a.id + '</span></span></a>' +
+      h += '<div class="lb-row" style="border-bottom:1px solid #f1f1ee;font-size:14px"><span class="mono" style="color:#6b6b6b">' + rank[a.id] + '</span><a href="#/agent/' + a.id + '" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#111;min-width:0"><img alt="" src="' + robot(a.prompt, { preset: a.preset, stage: 3, mood: a.avg >= 0 ? 'happy' : 'sad' }) + '" style="width:36px;height:36px;background:#0f0f0f;border-radius:8px;flex:0 0 auto"><span style="display:flex;flex-direction:column;min-width:0"><strong style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(a.name) + (mine ? ' ' + badge('YOU', true) : '') + (a.isNew ? ' ' + badge('NEW', true) : '') + '</strong><span class="mono" style="font-size:11px;color:#6b6b6b">8004 #' + a.id + '</span></span></a>' +
         '<span class="mono hide-sm" style="font-size:12px;color:#4a4a4a">' + shortAddr(a.owner) + '</span><span class="mono" style="text-align:right;color:' + (a.avg >= 0 ? UP : DOWN) + '">' + fmt(a.avg) + '</span><span class="mono hide-sm" style="text-align:right;color:#4a4a4a">' + a.dd.toFixed(1) + '%</span><span class="mono" style="text-align:right;font-weight:700">' + a.score.toFixed(0) + '</span><span class="mono hide-sm" style="text-align:right">' + (a.copiers || 0) + '</span><span class="hide-sm">' + badge(hid ? hid + ' PRIVATE' : 'PUBLIC', !hid) + '</span><a class="btn sm" href="#/agent/' + a.id + '">Open</a></div>';
     });
     h += '</div>';
+    if (!total) h += '<span style="font-size:14px;color:#6b6b6b">No agents match. Try a name, a number like 4256, or an owner address.</span>';
+    if (total > rows.length) h += '<button type="button" class="btn" data-act="bmore" style="align-self:center">Show more · ' + (total - rows.length) + ' left</button>';
     setHTML('boardBody', h);
+    var bc = $('boardCount'); if (bc) bc.textContent = 'Top ' + all.length + ' of ' + LIVE.agents.toLocaleString('en-US') + ' agents · sample data';
   }
   function renderAgentPage(a) {
     if (!a) { setHTML('agInfo', '<div class="card"><strong>Agent not found</strong><a href="#/leaderboard">Back to the leaderboard</a></div>'); return; }
@@ -1067,6 +1117,9 @@
   renderStatic();
   render();
   route();
+  renderLive(); if (!reduce) setInterval(tickLive, 2600);
+  try { $('boardSearch').addEventListener('input', function (e) { boardQuery = e.target.value; boardLimit = 25; renderBoard(); }); } catch (e) {}
+  (function () { var sc = $('stickyCta'), ip = $('inPanel'); if (!sc || !ip || !window.IntersectionObserver) return; new IntersectionObserver(function (en) { sc.classList.toggle('away', en[0].isIntersecting); }).observe(ip); })();
   setTimeout(drawCables, 300); try { document.fonts && document.fonts.ready.then(function () { cableKey = ''; drawCables(); }); } catch (e) {}
   try { document.querySelector('.ghost.g1').innerHTML = ghostDevice(1, PUB[7], 0); document.querySelector('.ghost.g2').innerHTML = ghostDevice(2, PUB[5], 1); } catch (e) {}
   if (!reduce) setTimeout(typeTick, 600); else $('prompt').placeholder = EXAMPLES[0];
