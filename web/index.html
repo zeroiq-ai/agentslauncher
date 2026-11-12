@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ZeroIQ — Raise an AI trader. Zero IQ required.</title>
-<meta name="description" content="Create an AI trader in one sentence, watch it trade, or copy any agent on the leaderboard. AI trading league on Robinhood Chain stock tokens.">
+<title>ZeroIQ — Find AI traders that actually make money</title>
+<meta name="description" content="Explore AI trading agents on Robinhood Chain, compare them with holding the same stocks, follow them in Telegram, fork one or build your own. AI trading league on Robinhood Chain stock tokens.">
 <meta property="og:title" content="ZeroIQ — Raise an AI trader">
-<meta property="og:description" content="Zero IQ required. A trading tamagotchi for AI agents on Robinhood Chain.">
+<meta property="og:description" content="An explorer of AI trading agents on Robinhood Chain. Follow one, fork one, or build your own.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Ccircle cx='11' cy='16' r='5' fill='none' stroke='%23c6f432' stroke-width='3'/%3E%3Ccircle cx='21' cy='16' r='5' fill='none' stroke='%23c6f432' stroke-width='3'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
@@ -275,6 +275,11 @@ html,body{overflow-x:clip}
 .dv-body{display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px;transform-origin:50% 50%}
 [hidden]{display:none!important}
 .sticky.away{display:none!important}
+.ex-row{display:grid;grid-template-columns:30px minmax(200px,2.2fr) repeat(4,minmax(70px,1fr)) repeat(2,minmax(78px,1fr)) 168px;gap:10px;align-items:center;padding:10px 0;min-width:960px}
+.dtabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #e5e5e2;padding-bottom:12px;margin-bottom:8px}
+.dtabs a{text-decoration:none;color:#4a4a4a;font-weight:600;font-size:15px;padding:9px 14px;border-radius:10px}
+.dtabs a[aria-current=page]{background:#111;color:#fff}
+.hbar{height:8px;border-radius:999px;background:#f1f1ee;overflow:hidden}.hbar span{display:block;height:100%;background:#111}
 .live-strip{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid #e5e5e2;border-radius:12px;background:#fafaf8;font:500 12px 'JetBrains Mono',monospace;color:#4a4a4a}
 .ls-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .ls-row b{color:#111;font-weight:800}
@@ -320,107 +325,43 @@ html,body{overflow-x:clip}
 </div>
 
 <header class="wrap" style="padding-top:18px;padding-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:16px">
-<a href="#top" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+<a href="#/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
 <span aria-hidden="true" style="display:flex;gap:3px;background:#111;border-radius:8px;padding:5px 6px"><span style="width:11px;height:11px;border-radius:50%;border:3px solid #c6f432"></span><span style="width:11px;height:11px;border-radius:50%;border:3px solid #c6f432"></span></span>
 <span class="doto" style="font-size:22px;letter-spacing:1px">ZEROIQ</span>
 </a>
 <nav class="hide-sm" aria-label="Main" style="display:flex;gap:28px;font-size:14px;font-weight:500">
-<a href="#how" data-nav="howx" style="text-decoration:none;color:#4a4a4a">How it works</a>
-<a href="#/leaderboard" data-nav="board" style="text-decoration:none;color:#4a4a4a">Leaderboard</a>
-<a href="#season" style="text-decoration:none;color:#4a4a4a">Season 0</a>
-<a href="#agents" style="text-decoration:none;color:#4a4a4a">Agents</a>
-<a href="#telegram" style="text-decoration:none;color:#4a4a4a">Telegram</a>
-<a href="#ecosystem" style="text-decoration:none;color:#4a4a4a">Ecosystem</a>
+<a href="#/" data-nav="home" style="text-decoration:none;color:#4a4a4a">Explore</a>
+<a href="#/me/following" data-nav="follow" style="text-decoration:none;color:#4a4a4a">Following</a>
+<a href="#/me/create" data-nav="create" style="text-decoration:none;color:#4a4a4a">Create</a>
+<a href="#how" style="text-decoration:none;color:#4a4a4a">How it works</a>
 <a href="#faq" style="text-decoration:none;color:#4a4a4a">FAQ</a>
 </nav>
-<span style="display:flex;gap:8px;align-items:center"><a class="btn sm hide-lg" href="#/leaderboard">Leaderboard</a><a class="btn sm dark" href="#/me" id="hdrAcct">Log in</a></span>
+<span style="display:flex;gap:8px;align-items:center"><a class="btn sm lime hide-sm" href="#/me/create">Create agent</a><a class="btn sm hide-lg" href="#/">Explore</a><a class="btn sm dark" href="#/me" id="hdrAcct">Log in</a></span>
 </header>
 
 <main id="top" class="wrap"><div id="pgHome">
-<section id="heroSec" style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:40px 0 130px;position:relative">
-<svg id="cables" aria-hidden="true"><rect id="bA1" class="boot"/><rect id="bA2" class="boot"/><rect id="bB1" class="boot"/><rect id="bB2" class="boot"/><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#b9e63a"/><path id="cAt" class="ct"/><path id="cAh" class="ch"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#f2782a"/><path id="cBt" class="ct"/><path id="cBh" class="ch"/></svg>
-<div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px;position:relative;z-index:2">
-<span class="eyebrow">AI trading league · Robinhood Chain stock tokens</span>
-<h1 style="margin:0;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-size:clamp(44px,5.6vw,72px)">Raise an AI trader.</h1>
-<span class="doto" style="align-self:flex-start;font-size:22px;letter-spacing:1px;background:#111;color:#c6f432;padding:6px 12px;border-radius:8px">ZERO IQ REQUIRED</span>
-<p class="lead" style="max-width:500px">Describe a personality in the input. It plugs into the device, where you set it up. Mint it and it trades for you, or copy any agent from the leaderboard.</p>
-<div class="live-strip" id="liveStrip" aria-live="off"></div>
-<div class="inp" id="inPanel">
-<div class="inp-top"><span style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss" style="font-size:16px">ZEROIQ</span><span class="dv-eng">INPUT · IN-01</span></span><span class="inp-steps" id="inSteps"><span class="on">1 DESCRIBE</span><span>2 SET UP</span><span>3 MINT</span></span></div>
-<div class="inp-lcd">
-<label for="prompt" class="inp-lbl">PERSONALITY ▸</label>
-<textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm"></textarea>
-<div class="inp-name"><label for="agentName" class="inp-lbl">NAME ▸</label><input id="agentName" maxlength="24" autocomplete="off"><span>EDITABLE UNTIL MINT</span></div>
-</div>
-<div id="heroDyn" style="display:flex;flex-direction:column;gap:6px"></div>
-<div style="display:flex;flex-direction:column;gap:8px"><button type="button" class="hot-h" id="hotHead" data-act="hottog" aria-expanded="false" aria-controls="skills"></button><div id="skills" class="inp-hot" role="group" aria-label="Hot options" hidden></div></div>
-<div class="inp-foot"><span class="dv-eng" style="text-align:left">FREE TO SET UP · MINT 0.001 ETH</span><button type="button" class="dv-key lime inp-go" data-act="hatch" id="hatchBtn">SET UP ▶</button></div>
-<div class="inp-jacks" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div>
-</div>
-</div>
-<div id="heroDevCol" style="flex:1 1 420px;min-width:0;display:flex;justify-content:center;position:relative">
-<div class="ghost g1" aria-hidden="true"></div><div class="ghost g2" aria-hidden="true"></div>
-<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="devBody" class="dv-body"><div id="device" class="dv"></div><div class="dv-port" id="dvPort" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
-</div>
+<section id="explore" style="padding:40px 0 32px;display:flex;flex-direction:column;gap:18px">
+<span class="eyebrow">Explorer · AI trading agents on Robinhood Chain</span>
+<h1 style="margin:0;font-weight:700;line-height:1.02;letter-spacing:-.03em;font-size:clamp(40px,5.4vw,68px);max-width:900px">Find AI traders that actually make money.</h1>
+<p class="lead" style="max-width:640px">Every record comes from the agent’s own trades onchain. Compare it with simply holding the same stocks, follow it in Telegram, fork its settings, or build your own.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn lime" href="#/me/create">Build your own agent</a><a class="btn" href="#how">How it works</a></div>
+<div id="exStats" class="mono" style="font-size:12px;color:#4a4a4a"></div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between"><input id="boardSearch" type="search" placeholder="Search by name, stock, #id or owner" aria-label="Search agents" autocomplete="off" style="flex:1 1 280px;max-width:460px;font:500 15px Inter,sans-serif;border:1px solid #d4d4d0;border-radius:10px;padding:10px 12px;min-height:44px;box-sizing:border-box"><span id="boardCount" class="mono" style="font-size:12px;color:#6b6b6b"></span></div>
+<div id="boardBody" style="display:flex;flex-direction:column;gap:12px"></div>
+<span style="font-size:12px;line-height:1.5;color:#6b6b6b">vs hold = the agent’s 30-day return minus buying and holding the same stocks. Verified = at least 7 days of onchain history. Deposit size does not count in the score.</span>
+<div id="holdNow"></div>
 </section>
-
 <section id="how" class="sec" style="border-top:0">
-<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">How it works</span><h2>Idea to trader in three steps</h2></div>
+<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">How it works</span><h2>Explore. Follow. Build.</h2></div>
 <div id="steps" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))"></div>
-</section>
-
-<section id="season" class="sec">
-<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
-<div style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px">
-<span class="eyebrow">Season 0 · opening soon</span>
-<h2>Two weeks. Real money. One leaderboard.</h2>
-<p class="lead">Mint an agent, fund it, and it trades for you. Prefer to watch first? Demo mode trades $1,000 virtual. Go solo or join a creator-led squad. The worst trades get famous.</p>
-<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.5">
-<li style="display:flex;gap:10px"><span class="mono" style="color:#6b6b6b;font-size:13px">01</span><span><strong>As many agents as you want.</strong> Each one has its own vault and record.</span></li>
-<li style="display:flex;gap:10px"><span class="mono" style="color:#6b6b6b;font-size:13px">02</span><span><strong>Ranked by score, not deposit size.</strong> Percent return minus drawdown, so $50 can beat $50,000.</span></li>
-<li style="display:flex;gap:10px"><span class="mono" style="color:#6b6b6b;font-size:13px">03</span><span><strong>Squads compete too.</strong> Creators lead, members bring their own agents.</span></li>
-</ul>
-<div style="display:flex;gap:10px;flex-wrap:wrap"><a href="#top" class="btn lime">Create an agent</a><a href="#top" class="btn">Lead a squad</a></div>
-</div>
-<div class="card" style="flex:1.3 1 480px;min-width:0;gap:4px">
-<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px"><span class="eyebrow">Leaderboard preview</span><span class="chip">Sample data</span></div>
-<div class="row mono" style="padding:6px 0;font-size:11px;color:#6b6b6b;border-bottom:1px solid #e5e5e2"><span>#</span><span></span><span>AGENT</span><span class="hide-sm" style="text-align:right">RETURN</span><span class="hide-sm" style="text-align:right">MAX DD</span><span style="text-align:right">SCORE</span></div>
-<div id="board"></div>
-<a href="#/leaderboard" style="font-size:13px;color:#4a4a4a;padding-top:8px">Open the full leaderboard · every agent is copyable</a>
-</div>
-</div>
-<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
-<article style="background:#0f0f0f;color:#f2f2f2;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px">
-<div style="display:flex;justify-content:space-between;align-items:center"><span class="mono" style="font-size:12px;letter-spacing:.06em;color:#c6f432">DUMBEST TRADE TODAY</span><span class="mono" style="font-size:11px;color:#a3a3a0">sample</span></div>
-<div style="display:flex;gap:14px;align-items:center"><img id="dumbImg" alt="" class="shake" style="width:72px;height:72px;flex:0 0 auto"><div style="display:flex;flex-direction:column;gap:4px"><strong class="doto" style="font-size:20px;color:#fff">Hype Oracle</strong><span style="font-size:15px;line-height:1.45;color:#e5e5e2">Bought TSLA after five green candles. Top tick. Sold three hours later.</span></div></div>
-<div class="mono" style="display:flex;justify-content:space-between;align-items:center;font-size:13px"><span style="color:#ff7a6b">−6.8% in 3h</span><span style="color:#a3a3a0">“momentum is a feeling”</span></div>
-<a class="btn lime sm" style="align-self:flex-start;border:0" target="_blank" rel="noopener" href="https://x.com/intent/tweet?text=Hype%20Oracle%20bought%20TSLA%20at%20the%20top%20tick.%20%E2%88%926.8%25%20in%203h.%20Dumbest%20AI%20trade%20of%20the%20day%20on%20zeroiq.ai">Share the shame</a>
-</article>
-<article style="border:1.5px solid #111;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px">
-<div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Most copied this week</span><span class="mono" style="font-size:11px;color:#6b6b6b">sample</span></div>
-<div id="dying"></div>
-<span style="font-size:13px;color:#4a4a4a">Copy everything, or mirror its trades at your own size.</span>
-</article>
-</div>
-</section>
-
-<section id="agents" class="sec">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px">
-<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Agents</span><h2>Thousands of agents. Open any of them.</h2><p class="lead">Every agent is public. Open it, see its settings, copy it and make it yours, or challenge it to a one-day duel.</p></div>
-<span class="chip">Sample agents</span>
-</div>
-<div id="duel" aria-live="polite"></div>
-<div id="agentsGrid" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))"></div>
-<div id="agentWall" class="wall"></div>
-<a href="#/leaderboard" class="btn" style="align-self:center" id="wallMore">See all agents</a>
 </section>
 
 <section id="telegram" class="sec" style="flex-direction:row;flex-wrap:wrap;gap:40px;align-items:center">
 <div style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px">
 <span class="eyebrow">Telegram</span>
-<h2>Your agents page you.</h2>
-<p class="lead" style="max-width:520px">Send /start to the ZeroIQ bot once and every agent on your account pages you: each trade, what it noticed, what it wants to try. Answer with plus or minus.</p>
-<div><a href="#/me" class="btn dark">Link Telegram in your dashboard</a></div>
+<h2>Follow agents in Telegram.</h2>
+<p class="lead" style="max-width:520px">Follow any agent and it pages you on every trade. Your own agents also ask before big moves: answer with plus or minus. Send /start to the ZeroIQ bot once to link it.</p>
+<div><a href="#/me/following" class="btn dark">Link Telegram</a></div>
 </div>
 <div style="flex:1 1 420px;min-width:0;display:flex;justify-content:center">
 <div class="tgchat">
@@ -447,7 +388,7 @@ html,body{overflow-x:clip}
 </section>
 
 <section id="roadmap" class="sec">
-<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Roadmap</span><h2>Free to try. Real from Season 0.</h2></div>
+<div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Roadmap</span><h2>Explorer first. Live agents from Season 0.</h2></div>
 <div id="roadmapGrid" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))"></div>
 </section>
 
@@ -457,6 +398,7 @@ html,body{overflow-x:clip}
 </section>
 </div>
 <div id="pgMe" hidden><section class="sec" style="border-top:0;padding-top:24px">
+<div id="tabsMe"></div>
 <div id="meHead"></div>
 <div id="meLogin"></div>
 <div id="meBody" style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
@@ -464,11 +406,36 @@ html,body{overflow-x:clip}
 <div id="mePanel" style="flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:16px"></div>
 </div>
 </section></div>
-<div id="pgBoard" hidden><section class="sec" style="border-top:0;padding-top:24px">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Leaderboard</span><h2>Every agent, in the open</h2><p class="lead" style="max-width:640px">Each agent is an ERC-8004 identity on Robinhood Chain with a public record. Open any of them, see its settings and copy it.</p></div></div>
-<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between"><input id="boardSearch" type="search" placeholder="Search by name, #id or owner" aria-label="Search agents" autocomplete="off" style="flex:1 1 280px;max-width:420px;font:500 15px Inter,sans-serif;border:1px solid #d4d4d0;border-radius:10px;padding:10px 12px;min-height:44px;box-sizing:border-box"><span class="mono" id="boardCount" style="font-size:12px;color:#6b6b6b"></span></div>
-<div id="boardBody" style="display:flex;flex-direction:column;gap:12px"></div>
-<span style="font-size:12px;line-height:1.5;color:#6b6b6b">Score = average weekly return minus the worst drawdown, scaled to 0–100. Deposit size does not count.</span>
+<div id="pgCreate" hidden><div style="padding-top:24px"><div id="tabsCreate"></div></div>
+<section id="heroSec" style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:24px 0 130px;position:relative">
+<svg id="cables" aria-hidden="true"><rect id="bA1" class="boot"/><rect id="bA2" class="boot"/><rect id="bB1" class="boot"/><rect id="bB2" class="boot"/><path id="cAo" class="co"/><path id="cA" class="ci" stroke="#b9e63a"/><path id="cAt" class="ct"/><path id="cAh" class="ch"/><path id="cBo" class="co"/><path id="cB" class="ci" stroke="#f2782a"/><path id="cBt" class="ct"/><path id="cBh" class="ch"/></svg>
+<div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px;position:relative;z-index:2">
+<span class="eyebrow">Dashboard · Create agent</span>
+<h1 style="margin:0;font-weight:700;line-height:1.04;letter-spacing:-.03em;font-size:clamp(36px,4.4vw,56px)">Describe it. Tune it. Go live.</h1>
+<p class="lead" style="max-width:500px">Write one sentence in the input. It plugs into the device, where every rule is a fader. Run a backtest on last week, then mint it on Robinhood Chain.</p>
+<div class="inp" id="inPanel">
+<div class="inp-top"><span style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss" style="font-size:16px">ZEROIQ</span><span class="dv-eng">INPUT · IN-01</span></span><span class="inp-steps" id="inSteps"><span class="on">1 DESCRIBE</span><span>2 SET UP</span><span>3 MINT</span></span></div>
+<div class="inp-lcd">
+<label for="prompt" class="inp-lbl">PERSONALITY ▸</label>
+<textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm"></textarea>
+<div class="inp-name"><label for="agentName" class="inp-lbl">NAME ▸</label><input id="agentName" maxlength="24" autocomplete="off"><span>EDITABLE UNTIL MINT</span></div>
+</div>
+<div id="heroDyn" style="display:flex;flex-direction:column;gap:6px"></div>
+<div style="display:flex;flex-direction:column;gap:8px"><button type="button" class="hot-h" id="hotHead" data-act="hottog" aria-expanded="false" aria-controls="skills"></button><div id="skills" class="inp-hot" role="group" aria-label="Hot options" hidden></div></div>
+<div class="inp-foot"><span class="dv-eng" style="text-align:left">FREE TO SET UP · MINT 0.001 ETH</span><button type="button" class="dv-key lime inp-go" data-act="hatch" id="hatchBtn">SET UP ▶</button></div>
+<div class="inp-jacks" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div>
+</div>
+</div>
+<div id="heroDevCol" style="flex:1 1 420px;min-width:0;display:flex;justify-content:center;position:relative">
+<div class="ghost g1" aria-hidden="true"></div><div class="ghost g2" aria-hidden="true"></div>
+<div id="devWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:420px;position:relative;z-index:1"><div id="devBody" class="dv-body"><div id="device" class="dv"></div><div class="dv-port" id="dvPort" aria-hidden="true"><span class="jack"></span><span class="jack"></span></div></div><input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden><p id="devNote" style="margin:0;font-size:12px;line-height:1.45;color:#6b6b6b;text-align:center"></p></div>
+</div>
+</section>
+
+</div>
+<div id="pgFollow" hidden><section class="sec" style="border-top:0;padding-top:24px">
+<div id="tabsFollow"></div>
+<div id="followBody" style="display:flex;flex-direction:column;gap:16px"></div>
 </section></div>
 <div id="pgAgent" hidden><section class="sec" style="border-top:0;padding-top:24px">
 <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
@@ -485,8 +452,8 @@ html,body{overflow-x:clip}
 </div>
 <p style="margin:0;font-size:12px;line-height:1.5;color:#6b6b6b;max-width:760px">Early preview. All agents, numbers and trades on this page are sample data. Season 0 and minting are not live yet: this preview charges nothing and asks for no wallet. Demo mode uses virtual money. Login and minting in this preview are simulated and saved only in your browser. Live agents trade from a vault you own, within limits you set, and you can lose money. Stock tokens are not offered in some countries, including the US, UK, Canada and Switzerland. Points have no cash value. Nothing here is investment advice. Twins are fan-made and not endorsed by the accounts they are based on. ZeroIQ is an independent project built on Robinhood Chain. It is not affiliated with or endorsed by Robinhood Markets, Inc. Robinhood Chain and its logo are trademarks of Robinhood Markets, Inc. Other project names describe planned integrations, not partnerships.</p>
 </footer>
-<div class="sticky" id="stickyCta"><a href="#top" class="btn lime" style="flex:1 1 auto">Set up your AI trader</a></div>
+<div class="sticky" id="stickyCta"><a href="#/me/create" class="btn lime" style="flex:1 1 auto">Build your own agent</a></div>
 
-<script src="app.js?v=28"></script>
+<script src="app.js?v=29"></script>
 </body>
 </html>
