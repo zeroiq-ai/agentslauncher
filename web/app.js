@@ -374,12 +374,47 @@
 
   // ---------- events ----------
   var IDEAS = ['buy the dip on NVDA, stay calm', 'chase green candles, aggressive', 'trade rarely, careful sizing'];
+  var EXAMPLES = [
+    'buy the dip on NVDA, stay calm',
+    'chase green candles, aggressive, take profits fast',
+    'trade rarely, careful sizing, only TSLA and AAPL',
+    'short PLTR when it pumps, hedge everything',
+    'copy @degen_intern but with half the risk',
+    'earn yield on idle cash, buy AMZN on red days',
+    'momentum only, never hold over the weekend',
+    'ape into meme tokens paired with NVDA, yolo',
+    'sell before earnings, rebuy after the drop',
+    'patient long-term, add to winners, cut losers at -5%'
+  ];
+  var ex = { i: 0, n: 0, mode: 'type', wait: 0 };
+  function currentExample() { return EXAMPLES[ex.i]; }
+  function typeTick() {
+    var el = $('prompt');
+    if (!el) return;
+    if (el.value || document.activeElement === el) { el.placeholder = currentExample(); setTimeout(typeTick, 400); return; }
+    var full = EXAMPLES[ex.i], delay = 45;
+    if (ex.mode === 'type') {
+      ex.n++;
+      if (ex.n >= full.length) { ex.n = full.length; ex.mode = 'hold'; ex.wait = 0; }
+      delay = 38 + Math.random() * 40;
+    } else if (ex.mode === 'hold') {
+      ex.wait++;
+      if (ex.wait > 4) ex.mode = 'erase';
+      delay = 450;
+    } else {
+      ex.n -= 2;
+      if (ex.n <= 0) { ex.n = 0; ex.mode = 'type'; ex.i = (ex.i + 1) % EXAMPLES.length; delay = 350; } else delay = 18;
+    }
+    var caret = ex.mode === 'hold' ? (ex.wait % 2 ? ' ' : '▍') : '▍';
+    el.placeholder = full.slice(0, ex.n) + caret;
+    setTimeout(typeTick, delay);
+  }
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]');
     if (!b) return;
     var a = b.getAttribute('data-act');
     var m = model();
-    if (a === 'hatch') startHatch(prompt() || IDEAS[0]);
+    if (a === 'hatch') startHatch(prompt() || currentExample());
     else if (a === 'idea') startHatch(IDEAS[+b.getAttribute('data-i')]);
     else if (a === 'twin') { $('prompt').value = '@degen_intern'; $('prompt').focus(); render(); }
     else if (a === 'ask') set({ askOpen: true });
@@ -404,7 +439,7 @@
     else if (a === 'addx') addHandle();
     else if (a === 'rmx') { st.tune.handles.splice(+b.getAttribute('data-i'), 1); renderBack(); }
     else if (a === 'simulate') {
-      if (st.phase !== 'born') { st.subject = prompt() || IDEAS[0]; st.phase = 'born'; st.xp = 0; }
+      if (st.phase !== 'born') { st.subject = prompt() || currentExample(); st.phase = 'born'; st.xp = 0; }
       st.rtick = st.tick; st.dismissed = false; st.mintOpen = false;
       flip('front');
     }
@@ -430,10 +465,11 @@
     var rp = $('rulesPreview'); if (rp) rp.textContent = rulesText(model().dna, st.tune.limit);
   });
 
-  $('prompt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); startHatch(prompt() || IDEAS[0]); } });
+  $('prompt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); startHatch(prompt() || currentExample()); } });
 
   renderStatic();
   render();
+  if (!reduce) setTimeout(typeTick, 600); else $('prompt').placeholder = EXAMPLES[0];
   if (!reduce) {
     setInterval(function () {
       if (st.phase === 'hatching') {

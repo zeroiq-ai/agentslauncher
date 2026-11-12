@@ -36,7 +36,11 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .pop{animation:pop .3s ease-out both}.bob{animation:bob 2.4s ease-in-out infinite}.shake{animation:shake .5s ease-in-out infinite;transform-origin:50% 90%}
 .ticker{animation:tick 40s linear infinite}
-@media (prefers-reduced-motion:reduce){.pop,.bob,.shake,.ticker{animation:none}}
+#prompt::placeholder{color:#111;opacity:1}
+#prompt:focus::placeholder{color:#a3a3a0}
+.shimmer{background:linear-gradient(90deg,#6b6b6b 0%,#6b6b6b 38%,#9cc414 46%,#c6f432 50%,#9cc414 54%,#6b6b6b 62%,#6b6b6b 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 3.2s linear infinite}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:-150% 0}}
+@media (prefers-reduced-motion:reduce){.pop,.bob,.shake,.ticker{animation:none}.shimmer{animation:none;background:none;color:#6b6b6b}}
 .row{display:grid;grid-template-columns:28px 36px 1fr 80px 80px 64px;gap:12px;align-items:center}
 .sticky{display:none}
 @media (max-width:760px){
@@ -77,8 +81,8 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 <p class="lead" style="max-width:500px">Describe its personality in one sentence. It hatches, replays last week in seconds and starts begging for attention. Feed it daily or it dies.</p>
 <div style="display:flex;align-items:center;gap:20px"><span class="eyebrow">Built on</span><img src="rhc-black.svg" alt="Robinhood Chain" style="height:22px;width:auto;display:block"></div>
 <div style="border:1.5px solid #111;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px">
-<label for="prompt" class="eyebrow">Describe its personality</label>
-<textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm" style="font:500 17px Inter,sans-serif;line-height:1.4;border:0;outline:none;resize:none;padding:0;background:transparent;color:#111">buy the dip on NVDA, stay calm</textarea>
+<label for="prompt" class="eyebrow shimmer">Describe its personality</label>
+<textarea id="prompt" rows="2" maxlength="280" placeholder="buy the dip on NVDA, stay calm" style="font:500 17px Inter,sans-serif;line-height:1.4;border:0;outline:none;resize:none;padding:0;background:transparent;color:#111"></textarea>
 <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #e5e5e2;padding-top:12px">
 <span class="eyebrow" id="skillsLabel">Onchain skills · pick one or more</span>
 <div id="skills" role="group" aria-labelledby="skillsLabel" style="display:flex;flex-wrap:wrap;gap:6px"></div>
@@ -195,6 +199,6 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Hatch your AI trader</a></div>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
