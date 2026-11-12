@@ -274,13 +274,13 @@
     } else {
       var wr = winRate(m.trades), risk = Math.min(100, Math.round(m.sim.dd * 100 / st.tune.limit * 100));
       var sk = skillNames().length ? SKILLS.filter(function (k) { return st.skills[k[0]]; }).map(function (k) { return SK_SHORT[k[0]]; }).join(' + ') : '';
-      s += '<div style="display:flex;gap:14px;align-items:center"><img alt="' + esc(m.name) + ', your agent" class="' + (m.mood === 'happy' ? 'bob' : '') + '" style="width:104px;height:104px;flex:0 0 auto" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '">';
+      s += '<div style="display:flex;gap:14px;align-items:center"><img alt="' + esc(m.name) + ', your agent" class="' + (m.mood === 'happy' ? 'bob' : '') + '" style="width:120px;height:120px;flex:0 0 auto" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '">';
       s += '<div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 auto"><span class="doto scr-name">' + esc(m.name) + '</span><span class="scr-sub">LV ' + m.lvl + ' · ' + (m.mood === 'happy' ? 'HAPPY' : (m.mood === 'sad' ? 'GRUMPY' : 'CALM')) + (m.born && !st.answered ? ' · HUNGRY' : '') + ' · ' + sk + '</span>';
       s += meter('WIN RATE', wr === null ? 0 : wr, wr === null ? '—' : wr + '%', 'Share of closed trades that made money this week');
       s += meter('RISK USED', risk, risk + '%', 'How much of the daily loss limit it has already used', true);
       s += meter('ENERGY', m.fedV, m.fedV + '%', 'Drops every day; the daily question refills it. At 0 the agent retires');
       s += '<span class="scr-legend">ENERGY drops daily · answer the daily question to refill</span></div></div>';
-      s += '<svg aria-hidden="true" viewBox="0 0 300 48" preserveAspectRatio="none" style="width:100%;height:48px;display:block;flex:0 0 auto"><line x1="0" y1="' + (m.baseY * 48 / 56).toFixed(1) + '" x2="300" y2="' + (m.baseY * 48 / 56).toFixed(1) + '" stroke="#2f3d12" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><polyline points="' + spark(m.sim.eq, 300, 48) + '" fill="none" stroke="#c6f432" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>';
+      s += '<div style="flex:1 1 auto;min-height:48px;display:flex;flex-direction:column;gap:4px"><span class="scr-legend" style="display:flex;justify-content:space-between"><span>EQUITY · LAST 7 DAYS</span><span>$1,000 START</span></span><svg aria-hidden="true" viewBox="0 0 300 48" preserveAspectRatio="none" style="width:100%;flex:1 1 auto;min-height:40px;display:block"><line x1="0" y1="' + (m.baseY * 48 / 56).toFixed(1) + '" x2="300" y2="' + (m.baseY * 48 / 56).toFixed(1) + '" stroke="#2f3d12" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><polyline points="' + spark(m.sim.eq, 300, 48) + '" fill="none" stroke="#c6f432" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div>';
       s += '<p aria-live="polite" class="scr-diary">› “' + esc(m.diary) + '”</p>';
       if (m.born) s += '<span class="scr-legend">READ FROM YOUR WORDS: ' + esc(m.parsed.cues.join(', ').toUpperCase()) + '</span>';
     }
