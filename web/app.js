@@ -670,7 +670,7 @@
   var ME = { user: null, agents: [], tg: null, pendingCopy: null };
   try { var saved = JSON.parse(localStorage.getItem('zq-me') || 'null'); if (saved) ME = Object.assign(ME, saved); } catch (e) {}
   function saveMe() { try { localStorage.setItem('zq-me', JSON.stringify(ME)); } catch (e) {} }
-  function fakeAddr(seed) { var h = hash(seed + 'zq'), s = '0x'; for (var i = 0; i < 40; i++) { h = (Math.imul(h, 1103515245) + 12345) >>> 0; s += '0123456789abcdef'[h % 16]; } return s; }
+  function fakeAddr(seed) { var h = hash(seed + 'zq'), s = '0x'; for (var i = 0; i < 40; i++) { h = (Math.imul(h, 1103515245) + 12345) >>> 0; s += '0123456789abcdef'[(h >>> 27) & 15]; } return s; }
   function shortAddr(a) { return a ? a.slice(0, 6) + '…' + a.slice(-4) : ''; }
   function agentStats(dna) {
     var wk = [0, 1, 2, 3].map(function (si) { return equity(prices(si), dna, 48); });
