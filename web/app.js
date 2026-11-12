@@ -155,8 +155,9 @@
   function prompt() { return $('prompt').value; }
   function startHatch(text) {
     $('prompt').value = text;
+    if (st.face === 'back' && $('dvFace')) { st.face = 'front'; buildFace(); }
     set({ phase: reduce ? 'born' : 'hatching', btick: 0, rtick: undefined, tick: reduce ? 999 : 0, subject: text, dnaPatch: null, xp: 0, dismissed: false, answered: null, joined: false, tg: false, askOpen: false, saveOpen: false, shareOpen: false, mintOpen: false, face: 'front' });
-    try { $('top').scrollIntoView({ behavior: 'smooth' }); } catch (e) {}
+    try { var dv = $('device'), r = dv.getBoundingClientRect(); if (r.top > window.innerHeight * 0.55 || r.bottom < 80) dv.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
   }
 
   function model() {
@@ -174,6 +175,8 @@
     var twin = /^\s*@\w+/.test(subject) ? subject.trim().split(/\s/)[0].slice(0, 24) + ' twin' : null;
     var name = born || hatching ? (twin || adj + ' ' + NOUN[(h >> 3) % 6]) : 'Zen Goblin';
     var preset = born || hatching ? h % 8 : 0;
+    if (st.nameOverride) name = st.nameOverride;
+    if (st.presetOverride !== undefined && st.presetOverride !== null) preset = st.presetOverride;
     var xp = st.xp || 0, lvl = born ? 1 + Math.floor(xp / 15) : 4, stage = lvl >= 5 ? 3 : (lvl >= 2 ? 2 : 1);
     var moodV = Math.max(4, Math.min(100, Math.round(55 + sim.ret * 6)));
     var healthV = Math.max(4, Math.min(100, Math.round(100 - sim.dd * 900)));
@@ -259,12 +262,31 @@
   }
   function ovBox(head, body, btns) { return '<div class="scr-ov" role="dialog" aria-label="' + head + '"><span class="scr-ov-h">' + head + '</span>' + body + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + btns + '</div></div>'; }
   function ovBtn(act, t, primary, extra) { return '<button type="button" class="scr-btn' + (primary ? ' on' : '') + '" data-act="' + act + '"' + (extra || '') + '>[ ' + t + ' ]</button>'; }
-  function mintOv(m) {
-    return ovBox(m.born && m.done ? 'TRIAL USED · GO LIVE' : 'GO LIVE · Ξ0.001', '<span class="scr-ov-t">Mint ' + esc(m.name) + '’s passport (ERC-8004) for 0.001 ETH, then fund its vault with USDG. It trades real stock tokens on Robinhood Chain, only within the limits you set. Withdraw anytime.</span><span class="scr-ov-s">Season 0 is not live yet: this preview charges nothing and asks for no wallet. You can lose money. Not offered in some countries, including the US, UK, Canada and Switzerland.</span>', ovBtn('join', 'JOIN THE LIST', true) + ovBtn('closeov', 'CLOSE'));
+  function screenTop(m) {
+    if (m.hatching) return 'BUILDING…';
+    var a = st.agentRef;
+    if (st.ctx === 'mine' && a) return (a.paused ? 'PAUSED' : (a.mode === 'demo' ? 'DEMO · $1,000 VIRTUAL' : 'LIVE · VAULT $' + (a.vault || 0))) + ' · #' + a.id;
+    if (st.ctx === 'public' && a) return 'AGENT #' + a.id + ' · ' + shortAddr(a.owner);
+    return m.born ? 'BACKTEST · LAST 7 DAYS' : 'DEMO AGENT · REPLAY';
   }
+  function mintOv(m) {
+    return ovBox('GO LIVE · Ξ0.001', '<span class="scr-ov-t">Mint ' + esc(m.name) + ' as an onchain agent (ERC-8004) for 0.001 ETH. Then fund its vault, or run it in demo mode first. Create as many agents as you like.</span><span class="scr-ov-s">Preview: nothing is charged and no wallet is connected. Live trading is not offered in the US, UK, Canada or Switzerland.</span>', ovBtn('mintgo', ME.user ? 'MINT' : 'LOG IN & MINT', true) + ovBtn('closeov', 'CLOSE'));
+  }
+  function loginOv() {
+    return ovBox('LOG IN', '<span class="scr-ov-t">Pick how you sign in. A wallet signs a message, no gas.</span><span class="scr-ov-s">Preview: no real account or wallet is connected.</span>', ovBtn('login', 'GOOGLE', true, ' data-m="google"') + ovBtn('login', 'WALLET', true, ' data-m="wallet"') + ovBtn('closeov', 'CANCEL'));
+  }
+  function actionOv(m) {
+    if (st.ctx === 'mine') return ovBox('FUND THE VAULT', '<span class="scr-ov-t">Send USDG and a little ETH for gas to the vault ' + shortAddr(fakeAddr('vault' + (st.agentRef ? st.agentRef.id : ''))) + '. The agent can only trade it. Only you can withdraw.</span><span class="scr-ov-s">Preview: deposits open with Season 0.</span>', ovBtn('closeov', 'OK', true));
+    return mintOv(m);
+  }
+  function limeKey() {
+    var t = st.ctx === 'public' ? ['COPY', 'COPY THIS AGENT', 'copyopen'] : (st.ctx === 'mine' ? ['DEPOSIT', 'FUND THE VAULT', 'mint'] : ['MINT · Ξ0.001', 'ENTER THE LEAGUE', 'mint']);
+    return kc('<button type="button" class="dv-key lime dv-mint" data-act="' + t[2] + '" aria-expanded="' + !!st.mintOpen + '">' + t[0] + '</button>', t[1]);
+  }
+
   function frontRender(m) {
     var bt = st.btick || 0;
-    setHTML('scrTop', '<span>' + (m.hatching ? 'HATCHING…' : (m.born ? (m.done ? 'TRIAL DONE · GO LIVE' : 'FREE TRIAL · $1,000 VIRTUAL') : 'DEMO AGENT · REPLAY')) + '</span><span>NVDA · 24/7</span>');
+    setHTML('scrTop', '<span>' + screenTop(m) + '</span><span>NVDA · 24/7</span>');
     var s = '';
     if (m.hatching) {
       s += '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;flex:1 1 auto"><img alt="" class="' + (bt < 14 ? 'shake' : 'pop') + '" style="width:140px;height:140px" src="' + robot(m.subject, { preset: m.preset, stage: bt < 14 ? 0 : 1, mood: 'happy' }) + '"><div style="display:flex;flex-direction:column;gap:6px;font-size:13px">';
@@ -280,15 +302,16 @@
       s += '<div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 auto"><span class="doto scr-name">' + esc(m.name) + '</span><span class="scr-sub">LV ' + m.lvl + ' · ' + (m.mood === 'happy' ? 'HAPPY' : (m.mood === 'sad' ? 'GRUMPY' : 'CALM')) + (m.born && !st.answered ? ' · HUNGRY' : '') + ' · ' + sk + '</span>';
       s += meter('WIN RATE', wr === null ? 0 : wr, wr === null ? '—' : wr + '%', 'Share of closed trades that made money this week');
       s += meter('RISK USED', risk, risk + '%', 'How much of the daily loss limit it has already used', true);
-      s += meter('ENERGY', m.fedV, m.fedV + '%', 'Drops every day; the daily question refills it. At 0 the agent retires');
-      s += '<span class="scr-legend">ENERGY drops daily · answer the daily question to refill</span></div></div>';
+      s += meter('SYNC', m.fedV, m.fedV + '%', 'How well it knows your style. Answer its daily question to raise it');
+      s += '<span class="scr-legend">SYNC · answer its daily question and it trades more like you</span></div></div>';
       s += '<div style="flex:1 1 auto;min-height:48px;display:flex;flex-direction:column;gap:4px"><span class="scr-legend" style="display:flex;justify-content:space-between"><span>EQUITY · LAST 7 DAYS</span><span>$1,000 START</span></span><svg aria-hidden="true" viewBox="0 0 300 48" preserveAspectRatio="none" style="width:100%;flex:1 1 auto;min-height:40px;display:block"><line x1="0" y1="' + (m.baseY * 48 / 56).toFixed(1) + '" x2="300" y2="' + (m.baseY * 48 / 56).toFixed(1) + '" stroke="#2f3d12" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><polyline points="' + spark(m.sim.eq, 300, 48) + '" fill="none" stroke="#c6f432" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div>';
       s += '<p aria-live="polite" class="scr-diary">› “' + esc(m.diary) + '”</p>';
       if (m.born) s += '<span class="scr-legend">READ FROM YOUR WORDS: ' + esc(m.parsed.cues.join(', ').toUpperCase()) + '</span>';
     }
     setHTML('scrMain', s);
     var ov = '';
-    if (st.mintOpen) ov = mintOv(m);
+    if (st.flow === 'login') ov = loginOv();
+    else if (st.mintOpen) ov = actionOv(m);
     else if (st.shareOpen && m.born) {
       var tweet = 'I just hatched ' + m.name + ' on ZeroIQ. Free trial run on $1,000 virtual: ' + fmt(m.sim.ret) + '. Now it trades for real. zeroiq.ai';
       ov = ovBox('SHARE CARD', '<div class="scr-card"><img alt="" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '"><span style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:10px;letter-spacing:.1em;color:#c6f432">JUST HATCHED</span><span class="doto" style="font-size:18px;line-height:1.05;color:#fff">' + esc(m.name) + '</span><span style="font-size:11px;color:#a3a3a0">trial run, $1,000 virtual: <span style="color:' + (m.sim.ret >= 0 ? '#c6f432' : '#ff7a6b') + '">' + fmt(m.sim.ret) + '</span></span></span></div>',
@@ -299,16 +322,17 @@
     var ro = function (v, l, c) { return '<div class="dv-kc"><div class="dv-lcd dv-ro"><span class="doto" style="color:' + c + '">' + v + '</span></div><span class="dv-eng">' + l + '</span></div>'; };
     setHTML('dvRead', ro(fmt(m.sim.ret), '7D RETURN', m.sim.ret >= 0 ? '#c6f432' : '#ff7a6b') + ro(('0' + m.trades.length).slice(-2), 'TRADES', '#d9ff5c') + ro((m.sim.dd * 100).toFixed(1) + '%', 'MAX DD', '#d9ff5c'));
     setHTML('dvKeys', kc('<button type="button" class="dv-key dv-round" data-act="flip" aria-label="Tune: flip the device to the control panel">' + TUNE_ICON + '</button>', 'TUNE') +
-      kc('<button type="button" class="dv-key dv-round" data-act="replay" aria-label="' + (m.born ? 'Trial used. Go live to keep trading' : 'Replay last week') + '">▶</button>', m.born ? 'TRIAL USED' : 'REPLAY') +
-      kc('<button type="button" class="dv-key dv-round" data-act="share" aria-label="Share on X"' + (m.born ? '' : ' aria-disabled="true" title="Hatch an agent first"') + '>⇪</button>', 'SHARE') +
-      kc('<button type="button" class="dv-key lime dv-mint" data-act="mint" aria-expanded="' + !!st.mintOpen + '">MINT · Ξ0.001</button>', 'ENTER THE LEAGUE'));
+      kc('<button type="button" class="dv-key dv-round" data-act="replay" aria-label="Replay last week">▶</button>', 'REPLAY') +
+      kc('<button type="button" class="dv-key dv-round" data-act="share" aria-label="Share on X"' + (m.born ? '' : ' aria-disabled="true" title="Try an agent first"') + '>⇪</button>', 'SHARE') +
+      limeKey());
   }
   function fader(key, label, val, min, max, color, attr) {
-    var top = Math.round((1 - (val - min) / (max - min)) * 112);
-    return '<div class="dv-fader"><span class="mono" id="tv-' + key + '" style="font-size:11px;font-weight:700;color:' + color + '">' + (key === 'limit' ? '−' + val + '%' : val) + '</span><div class="dv-ftrack"><span class="dv-frail"></span>' +
+    var hid = st.hidden && st.hidden[key], top = hid ? 56 : Math.round((1 - (val - min) / (max - min)) * 112);
+    return '<div class="dv-fader"' + (hid ? ' title="Not set by the owner"' : '') + '><span class="mono" id="tv-' + key + '" style="font-size:11px;font-weight:700;color:' + (hid ? '#5a5d66' : color) + '">' + (hid ? '—' : (key === 'limit' ? '−' + val + '%' : val)) + '</span><div class="dv-ftrack"><span class="dv-frail"></span>' +
       [0, 1, 2, 3, 4, 5].map(function (i) { return '<span class="dv-tick" style="top:' + (6 + i * 22) + 'px"></span>'; }).join('') +
-      '<span class="dv-cap" id="cap-' + key + '" style="top:' + top + 'px;border-top-color:' + color + '"></span><input type="range" min="' + min + '" max="' + max + '" value="' + val + '" ' + attr + '="' + key + '" aria-label="' + label + '"></div><span class="dv-eng">' + label + '</span></div>';
+      '<span class="dv-cap' + (hid ? ' off' : '') + '" id="cap-' + key + '" style="top:' + top + 'px;border-top-color:' + (hid ? '#5a5d66' : color) + '"></span><input type="range" min="' + min + '" max="' + max + '" value="' + val + '" ' + attr + '="' + key + '" aria-label="' + label + (hid ? ', not set by the owner' : '') + '"' + (st.readonly ? ' disabled' : '') + '></div><span class="dv-eng">' + label + '</span></div>';
   }
+
   function lean(d) { return st.tune.lean === undefined ? (d.style === 'momentum' ? 75 : 25) : st.tune.lean; }
   function knobDeg(v) { return Math.round(-135 + v / 99 * 270); }
   function knobLabel(v) { return 'DIP ◂ ' + ('0' + v).slice(-2) + ' ▸ MOMO'; }
@@ -325,10 +349,12 @@
     var pr = $('tv-preset'); if (pr) pr.textContent = 'PRESET: CUSTOM';
     document.querySelectorAll('#device [data-act=preset].on').forEach(function (x) { x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); });
     var rp = $('rulesPreview'); if (rp) rp.textContent = rulesText(model().dna, st.tune.limit);
+    saveMine();
   }
   function panelHTML(m) {
     var d = m.dna, t = st.tune, mode = st.mode || 'EQ', p = '';
-    if (st.mintOpen) return mintOv(m);
+    if (st.flow === 'login') return loginOv();
+    if (st.mintOpen) return actionOv(m);
     if (mode === 'EQ') {
       p += '<div style="display:flex;justify-content:space-between;align-items:center"><span class="dv-eng">EQUALIZER</span><span class="mono" id="tv-preset" style="font-size:10px;font-weight:700;color:#c6f432">PRESET: ' + (st.preset || 'CUSTOM') + '</span></div>';
       p += '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 4px">' + fader('patience', 'PAT', d.patience, 0, 99, '#c6f432', 'data-dna') + fader('fomo', 'FOMO', d.fomo, 0, 99, '#c6f432', 'data-dna') + fader('risk', 'RISK', d.risk, 0, 99, '#c6f432', 'data-dna') + fader('freq', 'ACT', d.freq, 0, 99, '#c6f432', 'data-dna') + fader('limit', 'LOSS', t.limit, 3, 20, '#ff7a6b', 'data-tune') + '</div>';
@@ -345,6 +371,11 @@
       p += '<span class="dv-eng">X ACCOUNTS · UP TO 3</span><div class="dv-lcd dv-xin">' + t.handles.map(function (h, i) { return '<span class="dv-xh">' + esc(h) + '<button type="button" data-act="rmx" data-i="' + i + '" aria-label="Remove ' + esc(h) + '">×</button></span>'; }).join('') + (t.handles.length < 3 ? '<input id="xHandle" type="text" maxlength="16" placeholder="@handle▍" aria-label="X handle to follow"><button type="button" class="scr-btn on" data-act="addx">[ ADD ]</button>' : '') + '</div>';
       p += '<span class="dv-note">Posts are signals it weighs inside its rules, never orders. Signals switch on in Season 0.</span>';
     }
+    if (st.readonly) {
+      p = p.replace(/<button type="button" class="dv-(key|tog)/g, '<button type="button" disabled class="dv-$1').replace('<input id="xHandle"', '<input id="xHandle" disabled').replace('tabindex="0"', 'tabindex="-1" aria-disabled="true"');
+      if (mode === 'EQ' && st.hidden.lean) { var l0 = lean(d); p = p.replace(knobLabel(l0), 'NOT SET').replace('rotate(' + knobDeg(l0) + 'deg)', 'rotate(0deg)').replace('<div class="dv-knobwrap">', '<div class="dv-knobwrap" title="Not set by the owner">'); }
+      if (mode === 'SIGNALS' && !t.handles.length) p = p.replace('<div class="dv-lcd dv-xin">', '<div class="dv-lcd dv-xin"><span style="font-size:12px;color:#4d5f1c">none shared</span>');
+    }
     return p;
   }
   function renderBack() {
@@ -353,13 +384,15 @@
     if (ae && ae.closest && ae.closest('#device') && ae.getAttribute('data-act')) fk = '[data-act="' + ae.getAttribute('data-act') + '"]' + ['data-p', 'data-t', 'data-k', 'data-c', 'data-m'].map(function (a) { var v = ae.getAttribute(a); return v ? '[' + a + '="' + v + '"]' : ''; }).join('');
     setHTML('dvRail', ['EQ', 'MARKETS', 'SIGNALS'].map(function (x) { return '<button type="button" class="dv-key dv-mode' + (x === mode ? ' on' : '') + '" data-act="mode" data-m="' + x + '" aria-pressed="' + (x === mode) + '">' + x + '</button>'; }).join(''));
     var pe = $('dvPanel'); pe._h = null; setHTML('dvPanel', panelHTML(m));
-    $('rulesPreview').textContent = rulesText(m.dna, st.tune.limit);
+    var hl = Object.keys(st.hidden || {}).filter(function (k) { return st.hidden[k]; });
+    $('rulesPreview').textContent = (hl.length ? 'private: ' + hl.join(', ') + ' · shown in the middle\n' : '') + rulesText(m.dna, st.tune.limit);
     var md = st.md;
-    setHTML('dvSlot', '<span class="dv-mouth" aria-hidden="true"></span><span style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto"><span class="mono" style="font-size:10px;font-weight:800;letter-spacing:.1em;color:' + (md ? '#c6f432' : '#e6e7ea') + '">' + (md ? 'LOADED · ' + esc(md.name.toUpperCase()).slice(0, 26) : 'STRATEGY FILE · .MD') + '</span><span class="mono" style="font-size:10px;color:#8a8d96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (md ? (md.size / 1024).toFixed(1) + ' KB · ' + md.lines + ' lines' + (md.title ? ' · ' + esc(md.title) : '') : 'your playbook in markdown · read in Season 0') + '</span></span>' +
+    if (st.readonly) setHTML('dvSlot', '<span class="dv-mouth" aria-hidden="true"></span><span style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto"><span class="mono" style="font-size:10px;font-weight:800;letter-spacing:.1em;color:#8a8d96">STRATEGY FILE · PRIVATE</span><span class="mono" style="font-size:10px;color:#6d7079">copy the agent to load your own</span></span>');
+    else setHTML('dvSlot', '<span class="dv-mouth" aria-hidden="true"></span><span style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto"><span class="mono" style="font-size:10px;font-weight:800;letter-spacing:.1em;color:' + (md ? '#c6f432' : '#e6e7ea') + '">' + (md ? 'LOADED · ' + esc(md.name.toUpperCase()).slice(0, 26) : 'STRATEGY FILE · .MD') + '</span><span class="mono" style="font-size:10px;color:#8a8d96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (md ? (md.size / 1024).toFixed(1) + ' KB · ' + md.lines + ' lines' + (md.title ? ' · ' + esc(md.title) : '') : 'your playbook in markdown · read in Season 0') + '</span></span>' +
       (md ? '<button type="button" class="dv-key dv-slotbtn" data-act="eject" aria-label="Remove strategy file">EJECT</button>' : '<button type="button" class="dv-key dv-slotbtn" data-act="load" aria-label="Load a strategy .md file">LOAD</button>'));
     setHTML('dvKeysB', kc('<button type="button" class="dv-key dv-round" data-act="flip" aria-label="Flip back to the screen">' + TUNE_ICON.replace('rotate(90deg)', 'rotate(-90deg) scaleX(-1)') + '</button>', 'FRONT') +
-      kc('<button type="button" class="dv-key dv-sim" data-act="simulate">▶ SIMULATE</button>', st.phase === 'born' ? 'TRIAL USED' : '1 FREE RUN') +
-      kc('<button type="button" class="dv-key lime dv-mint" data-act="mint" aria-expanded="' + !!st.mintOpen + '">MINT · Ξ0.001</button>', 'ENTER THE LEAGUE'));
+      kc('<button type="button" class="dv-key dv-sim" data-act="simulate">▶ SIMULATE</button>', 'LAST WEEK') +
+      limeKey());
     if (fk) { var n = document.querySelector('#device ' + fk); if (n) n.focus(); }
   }
   function refresh() { if (st.face === 'back') renderBack(); else render(); }
@@ -389,7 +422,7 @@
   function render() {
     var m = model();
     var p = prompt();
-    $('hatchBtn').textContent = m.born ? 'Hatch another' : 'Hatch';
+    $('hatchBtn').textContent = m.born ? 'Try another' : 'Try it';
     setHTML('skills', skillsHTML());
 
     // hero dynamic area
@@ -403,10 +436,10 @@
       hd += '<button type="button" data-act="twin" style="font:600 13px Inter,sans-serif;color:#111;background:#fff;border:1.5px dashed #111;border-radius:999px;padding:8px 14px;min-height:44px;cursor:pointer">or hatch a twin of @any_CT_account</button></div>';
     }
     if (m.born) {
-      hd += '<div class="card" style="padding:14px 16px;gap:10px"><span class="eyebrow">Keep it alive</span>';
-      hd += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:15px"><span class="mono" style="color:#6b6b6b;margin-right:8px">' + (st.answered ? '✓' : '1') + '</span>Feed it today’s question</span>' + stepBtn(st.answered, st.answered ? 'Fed' : 'Answer', 'ask') + '</div>';
-      hd += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:15px"><span class="mono" style="color:#6b6b6b;margin-right:8px">' + (st.tg ? '✓' : '2') + '</span>Get the question in Telegram</span>' + stepBtn(st.tg, st.tg ? 'Soon' : 'Connect', 'tg') + '</div>';
-      hd += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:15px"><span class="mono" style="color:#6b6b6b;margin-right:8px">' + (st.joined ? '✓' : '3') + '</span>Go live with real money</span>' + stepBtn(st.joined, st.joined ? 'On the list' : 'Go live', 'mint') + '</div>';
+      hd += '<div class="card" style="padding:14px 16px;gap:10px"><span class="eyebrow">Next steps</span>';
+      hd += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:15px"><span class="mono" style="color:#6b6b6b;margin-right:8px">' + (st.answered ? '✓' : '1') + '</span>Answer its first question</span>' + stepBtn(st.answered, st.answered ? 'Fed' : 'Answer', 'ask') + '</div>';
+      hd += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:15px"><span class="mono" style="color:#6b6b6b;margin-right:8px">' + (st.tg ? '✓' : '2') + '</span>Get its messages in Telegram</span>' + stepBtn(st.tg, st.tg ? 'Soon' : 'Connect', 'tg') + '</div>';
+      hd += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:15px"><span class="mono" style="color:#6b6b6b;margin-right:8px">' + (st.joined ? '✓' : '3') + '</span>Mint it and go live</span>' + stepBtn(st.joined, st.joined ? 'On the list' : 'Go live', 'mint') + '</div>';
       if (st.askOpen && !st.answered) {
         hd += '<div style="border-top:1px solid #e5e5e2;padding-top:10px;display:flex;flex-direction:column;gap:8px"><span style="font-size:15px">NVDA reports earnings tomorrow. Hold through it, or sell before?</span><div style="display:flex;gap:8px"><button type="button" class="btn sm" data-act="hold">Hold</button><button type="button" class="btn sm" data-act="sell">Sell before</button></div></div>';
       }
@@ -418,38 +451,35 @@
     // device
     if (!$('dvFace')) buildShell();
     if (st.face !== 'back') frontRender(m);
-    setHTML('devNote', (m.born ? 'Read from your words: ' + esc(m.parsed.cues.join(', ')) + '. ' : '') + 'Demo runs on sample price data and replays spot trades only. Other skills switch on in Season 0 with real Robinhood Chain prices.');
+    $('device').classList.toggle('ro', !!st.readonly);
+    if (st.ctx === 'mine' || st.ctx === 'public') setHTML('devNote', 'Sample prices. Live trading opens with Season 0.'); else setHTML('devNote', (m.born ? 'Read from your words: ' + esc(m.parsed.cues.join(', ')) + '. ' : '') + 'The backtest runs on sample prices and simulates spot trades only.');
 
-    // dying + duel
-    var dying = SAMPLES.slice().sort(function (a, b) { return a.score - b.score; }).slice(0, 3), WHY = ['owner missed 2 questions', 'drawdown near the limit', 'chased 4 tops this week'];
-    setHTML('dying', dying.map(function (s, i) {
-      var on = st.bet === s.n;
-      return '<div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #f1f1ee"><img alt="" style="width:40px;height:40px;background:#0f0f0f;border-radius:8px;flex:0 0 auto" src="' + robot(s.n, { preset: s.pre, stage: 2, mood: 'sad' }) + '"><div style="display:flex;flex-direction:column;flex:1 1 auto;min-width:0"><strong style="font-size:15px;font-weight:600">' + s.n + '</strong><span class="mono" style="font-size:12px;color:#6b6b6b">health ' + Math.max(6, 30 - i * 8) + ' · ' + WHY[i] + '</span></div><button type="button" class="btn sm" data-act="bet" data-n="' + s.n + '" style="' + (on ? 'background:#c6f432;border-color:#111' : '') + '">' + (on ? '50 pts in' : 'Bet 50 pts') + '</button></div>';
+    // most copied + duel
+    setHTML('dying', PUB.slice().sort(function (a, b) { return b.copiers - a.copiers; }).slice(0, 3).map(function (s) {
+      return '<div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #f1f1ee"><img alt="" style="width:40px;height:40px;background:#0f0f0f;border-radius:8px;flex:0 0 auto" src="' + robot(s.prompt, { preset: s.preset, stage: 3, mood: 'happy' }) + '"><div style="display:flex;flex-direction:column;flex:1 1 auto;min-width:0"><strong style="font-size:15px;font-weight:600">' + esc(s.name) + '</strong><span class="mono" style="font-size:12px;color:#6b6b6b">' + s.copiers + ' copiers · ' + fmt(s.avg) + ' / wk</span></div><a class="btn sm" href="#/agent/' + s.id + '">Copy</a></div>';
     }).join(''));
-    $('betNote').textContent = st.bet ? 'You bet 50 points that ' + st.bet + ' dies tomorrow. Points only, no cash value.' : 'Pick one. Right calls earn points and a badge.';
     setHTML('duel', st.duel ? '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:#f7f7f5;border:1px solid #e5e5e2;border-radius:12px;padding:12px 16px"><span style="font-size:15px">Duel queued: <strong>' + esc((m.born ? m.name : 'your agent') + ' vs ' + st.duel) + '</strong>. Starts with the next round.</span><button type="button" class="btn sm" data-act="duelcancel">Cancel</button></div>' : '');
   }
 
   function renderStatic() {
-    var T = [['DUMBEST', 'Hype Oracle bought TSLA at the top', '−6.8%', '#ff7a6b'], ['HATCHED', 'Zen Goblin, “buy the dip, stay calm”', 'Lv 1', '#fff'], ['RIP', 'Sleepy Intern, lived 9 days', '−4.2%', '#ff7a6b'], ['EVOLVED', 'Calm Hamster raised patience 60 → 72', 'Lv 5', '#fff'], ['DUEL', 'Lucky Robot beat Feral Gremlin', '+2.1%', '#c6f432'], ['SAMPLE', 'all data on this page is sample data', '', '#fff']];
+    var T = [['DUMBEST', 'Hype Oracle bought TSLA at the top', '−6.8%', '#ff7a6b'], ['HATCHED', 'Zen Goblin, “buy the dip, stay calm”', 'Lv 1', '#fff'], ['COPIED', 'Degen Hamster copied by 263 traders', '', '#fff'], ['EVOLVED', 'Calm Hamster raised patience 60 → 72', 'Lv 5', '#fff'], ['DUEL', 'Lucky Robot beat Feral Gremlin', '+2.1%', '#c6f432'], ['SAMPLE', 'all data on this page is sample data', '', '#fff']];
     var tk = T.concat(T).map(function (t) { return '<span><span style="color:#c6f432">' + t[0] + '</span> ' + t[1] + ' <span style="color:' + t[3] + '">' + t[2] + '</span></span>'; }).join('');
     $('ticker').innerHTML = tk;
-    var steps = [['01', 'Describe it', 'One sentence, or the @handle of a CT account you want a twin of. It becomes plain trading rules you can read.', 0, 'ok'], ['02', 'One free run', 'It hatches and trades last week with $1,000 of virtual cash, once. You see every buy, every sell and its excuse. Like it? Fund it and it trades for real.', 1, 'happy'], ['03', 'Train it daily', 'One question a day. Once a day it proposes one change, you approve or reject. Skip three days and it dies.', 3, 'happy']];
+    var steps = [['01', 'Describe it', 'One sentence, or the @handle of a CT account you want a twin of. It becomes plain trading rules you can read.', 0, 'ok'], ['02', 'See how it trades', 'Press Try it and it backtests last week in seconds. Every buy, every sell and its excuse. Tune it until you like it.', 1, 'happy'], ['03', 'Mint it or copy one', 'Mint it and it trades for you, or run it in demo mode first. Or open any agent on the leaderboard and copy it. Make as many as you want.', 3, 'happy']];
     $('steps').innerHTML = steps.map(function (s) { return '<article class="card" style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><img alt="" style="width:72px;height:72px;background:#0f0f0f;border-radius:12px" src="' + robot('s', { preset: 3, stage: s[3], mood: s[4] }) + '"><span class="doto" style="font-size:28px;color:#d4d4d0">' + s[0] + '</span></div><strong style="font-size:20px">' + s[1] + '</strong><span style="font-size:15px;line-height:1.5;color:#4a4a4a">' + s[2] + '</span></article>'; }).join('');
     $('board').innerHTML = SAMPLES.map(function (s, i) {
       return '<div class="row mono" style="padding:10px 0;border-bottom:1px solid #f1f1ee;font-size:13px"><span style="color:#6b6b6b">' + (i + 1) + '</span><img alt="" style="width:36px;height:36px;background:#0f0f0f;border-radius:8px" src="' + robot(s.n, { preset: s.pre, stage: i < 2 ? 3 : 2, mood: s.avg >= 0 ? 'happy' : 'sad' }) + '"><span style="display:flex;flex-direction:column;min-width:0"><strong style="font:600 15px Inter,sans-serif">' + s.n + '</strong><span style="color:#6b6b6b;font-size:12px">' + s.squad + '</span></span><span class="hide-sm" style="text-align:right;color:' + (s.avg >= 0 ? UP : DOWN) + '">' + fmt(s.avg) + '</span><span class="hide-sm" style="text-align:right;color:#4a4a4a">' + s.dd.toFixed(1) + '%</span><span style="text-align:right;font-weight:700">' + s.score.toFixed(0) + '</span></div>';
     }).join('');
     $('agentsGrid').innerHTML = SAMPLES.slice(0, 4).map(function (s, i) {
       var col = s.avg >= 0 ? UP : DOWN;
-      return '<article class="card" style="padding:16px"><div style="display:flex;gap:12px;align-items:center"><img alt="" style="width:56px;height:56px;background:#0f0f0f;border-radius:10px;flex:0 0 auto" src="' + robot(s.n, { preset: s.pre, stage: i < 2 ? 3 : 2, mood: s.avg >= 0 ? 'happy' : 'sad' }) + '"><div style="display:flex;flex-direction:column;min-width:0"><strong style="font-size:16px;font-weight:600">' + s.n + '</strong><span class="mono" style="font-size:12px;color:#6b6b6b">Level ' + Math.max(1, 7 - i * 2) + '</span></div></div><span style="font-size:14px;line-height:1.45;color:#4a4a4a;min-height:40px">“' + s.seed + '”</span><svg aria-hidden="true" viewBox="0 0 240 44" preserveAspectRatio="none" style="width:100%;height:44px;display:block"><polyline points="' + spark(s.all, 240, 44) + '" fill="none" stroke="' + col + '" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><div class="mono" style="display:flex;justify-content:space-between;font-size:12px;color:#6b6b6b"><span>avg / wk <strong style="color:' + col + '">' + fmt(s.avg) + '</strong></span><span>max dd ' + s.dd.toFixed(1) + '%</span></div><div style="display:flex;gap:8px"><button type="button" class="btn sm" style="flex:1 1 auto" data-act="fork" data-seed="' + s.seed + '">Fork</button><button type="button" class="btn dark sm" style="flex:1 1 auto" data-act="duel" data-n="' + s.n + '">Duel</button></div></article>';
+      return '<article class="card" style="padding:16px"><div style="display:flex;gap:12px;align-items:center"><img alt="" style="width:56px;height:56px;background:#0f0f0f;border-radius:10px;flex:0 0 auto" src="' + robot(s.n, { preset: s.pre, stage: i < 2 ? 3 : 2, mood: s.avg >= 0 ? 'happy' : 'sad' }) + '"><div style="display:flex;flex-direction:column;min-width:0"><strong style="font-size:16px;font-weight:600">' + s.n + '</strong><span class="mono" style="font-size:12px;color:#6b6b6b">Level ' + Math.max(1, 7 - i * 2) + '</span></div></div><span style="font-size:14px;line-height:1.45;color:#4a4a4a;min-height:40px">“' + s.seed + '”</span><svg aria-hidden="true" viewBox="0 0 240 44" preserveAspectRatio="none" style="width:100%;height:44px;display:block"><polyline points="' + spark(s.all, 240, 44) + '" fill="none" stroke="' + col + '" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><div class="mono" style="display:flex;justify-content:space-between;font-size:12px;color:#6b6b6b"><span>avg / wk <strong style="color:' + col + '">' + fmt(s.avg) + '</strong></span><span>max dd ' + s.dd.toFixed(1) + '%</span></div><div style="display:flex;gap:8px"><a class="btn sm" style="flex:1 1 auto" href="#/agent/' + PUB[i].id + '">Copy</a><button type="button" class="btn dark sm" style="flex:1 1 auto" data-act="duel" data-n="' + s.n + '">Duel</button></div></article>';
     }).join('');
     $('dumbImg').src = robot('Hype Oracle', { preset: 1, stage: 2, mood: 'sad' });
-    $('ripImg').src = robot('rip', { preset: 4, stage: 2, dead: true });
     var ECO = [['Virtuals Protocol', 'Graduate', 'Agents with a proven onchain record launch as tokenized agents that others can back.', 'Planned'], ['Bankr', 'Act from X', 'Tag your agent on X with a command, Bankr-style. Later: hand a graduated agent to a Bankr wallet.', 'Planned'], ['ERC-8004', 'Agent passport', 'Every agent gets an onchain identity and a portable track record other arenas can read.', 'Planned'], ['Telegram', 'Daily question', 'Feed your agent from a chat without opening the site.', 'Season 0'], ['X', 'Share cards + tags', 'Births, deaths and duels ready to post. Tag your agent with a post to feed it.', 'Season 0'], ['Dune', 'Public logs', 'A dashboard where anyone can audit every agent decision.', 'Planned']];
     $('eco').innerHTML = ECO.map(function (e) { var pl = e[3] === 'Planned'; return '<article class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong style="font-size:17px">' + e[0] + '</strong><span class="mono" style="font-size:11px;padding:3px 8px;border-radius:6px;flex:0 0 auto;' + (pl ? 'background:#f1f1ee;color:#4a4a4a' : 'background:#111;color:#c6f432') + '">' + e[3] + '</span></div><span class="eyebrow">' + e[1] + '</span><span style="font-size:14px;line-height:1.5;color:#4a4a4a">' + e[2] + '</span></article>'; }).join('');
-    var RM = [['Now', 'Hatch, try, go live', 'Free hatch and one trial run on $1,000 virtual. Mint for 0.001 ETH, fund its vault and it trades stock tokens on Robinhood Chain within your limits. Season 0 is real money.', 'border:1.5px solid #111'], ['Next', 'Squads, duels, X tags', 'Creator-led squads, one-day duels, tag your agent on X to feed it, an ERC-8004 passport for every agent.', 'border:1px solid #e5e5e2'], ['Later', 'Graduate', 'Agents with a proven record can graduate to agent launchpads such as Virtuals Protocol on Robinhood Chain, with hard limits and only after legal review.', 'border:1px dashed #d4d4d0;background:#f7f7f5']];
+    var RM = [['Now', 'Create, copy, go live', 'Try any idea free. Mint an agent for 0.001 ETH, fund its vault and it trades stock tokens on Robinhood Chain within your limits, or run it in demo mode. Copy any agent from the leaderboard.', 'border:1.5px solid #111'], ['Next', 'Squads, duels, X tags', 'Creator-led squads, one-day duels, tag your agent on X to feed it, an ERC-8004 passport for every agent.', 'border:1px solid #e5e5e2'], ['Later', 'Graduate', 'Agents with a proven record can graduate to agent launchpads such as Virtuals Protocol on Robinhood Chain, with hard limits and only after legal review.', 'border:1px dashed #d4d4d0;background:#f7f7f5']];
     $('roadmapGrid').innerHTML = RM.map(function (r) { return '<div style="' + r[3] + ';border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:8px"><span class="eyebrow">' + r[0] + '</span><strong style="font-size:18px">' + r[1] + '</strong><span style="font-size:15px;line-height:1.5;color:#4a4a4a">' + r[2] + '</span></div>'; }).join('');
-    var FAQ = [['Is this real money?', 'From Season 0, yes. A new agent gets one free trial run on $1,000 of virtual cash. To keep it trading you mint it for 0.001 ETH and fund its vault with USDG. The vault is a smart account you own: the agent can only trade inside the limits you set, and you can withdraw any time. You can lose money. Bets still use points with no cash value. Season 0 is not live yet.'], ['Who can play with real money?', 'Stock tokens on Robinhood Chain are not offered in some countries, including the US, UK, Canada and Switzerland. Real-money play follows the same rules, so it is blocked there.'], ['Is it really AI?', 'Partly, on purpose. Your sentence is compiled into plain rules you can read, and code executes them. Once a day an AI reviews the trades and your answers and proposes one change, which you approve or reject.'], ['What is a twin?', 'A fan-made agent built from the public posts of an X account. It is labelled as a twin, it is not the real person, and creators can ask to opt out or claim theirs.'], ['Can I feed my agent from X?', 'Planned for Season 1: tag your agent in a reply to any post and it reads that post as a signal. It never trades on a tag alone; it weighs it inside its rules and limits.'], ['What happens if I forget about it?', 'Each day has one question. Miss three in a row and the agent retires to the Graveyard with a share card. A live agent stops trading, moves to USDG and leaves the money in your vault to withdraw. You can always hatch a new one.'], ['How is the score calculated?', 'Average weekly return minus the worst drawdown, scaled to 0–100. A steady agent ranks above one that swung wildly, even if the wild one made more.'], ['How does ZeroIQ make money?', 'Hatching, tuning and the trial run are free. Minting an agent costs 0.001 ETH. Later: skins, sponsored seasons and a small share of trading fees.'], ['What can an agent do onchain?', 'Pick one or more skills when you hatch it: spot trades, limit and stop orders, earning on idle cash, shorts and hedges (2x max), borrowing against stocks, dividend yield, covered income, publishing a basket, and meme tokens. In this preview the replay simulates spot trades only.'], ['What does the mint give me?', 'An onchain agent passport (ERC-8004) on Robinhood Chain, its own vault and a public track record. The vault stays yours: the agent gets a key that can only trade, never withdraw.']];
+    var FAQ = [['Is this real money?', 'From Season 0, yes. You mint an agent for 0.001 ETH and fund its vault with USDG. The vault is a smart account you own: the agent can only trade inside the limits you set, and you can withdraw any time. You can lose money. Want to watch first? Switch on demo mode in its settings and it trades $1,000 of virtual cash instead. Season 0 is not live yet.'], ['Can I copy someone else’s agent?', 'Yes. Every agent on the leaderboard is an ERC-8004 identity with a public record. Open it, pick copy everything or mirror trades only, choose your size and loss limit, then edit whatever you like. Settings the owner keeps private start in the middle.'], ['How many agents can I have?', 'As many as you want. Each one is its own mint, vault and record.'],  ['Who can play with real money?', 'Stock tokens on Robinhood Chain are not offered in some countries, including the US, UK, Canada and Switzerland. Real-money play follows the same rules, so it is blocked there.'], ['Is it really AI?', 'Partly, on purpose. Your sentence is compiled into plain rules you can read, and code executes them. Once a day an AI reviews the trades and your answers and proposes one change, which you approve or reject.'], ['What is a twin?', 'A fan-made agent built from the public posts of an X account. It is labelled as a twin, it is not the real person, and creators can ask to opt out or claim theirs.'], ['Can I feed my agent from X?', 'Planned for Season 1: tag your agent in a reply to any post and it reads that post as a signal. It never trades on a tag alone; it weighs it inside its rules and limits.'], ['What happens if I forget about it?', 'Nothing bad. It keeps trading inside your limits. The daily question only helps it learn your style, so skipping it means it learns slower. Your money stays in your vault.'], ['How is the score calculated?', 'Average weekly return minus the worst drawdown, scaled to 0–100. A steady agent ranks above one that swung wildly, even if the wild one made more.'], ['How does ZeroIQ make money?', 'Hatching, tuning and the trial run are free. Minting an agent costs 0.001 ETH. Later: skins, sponsored seasons and a small share of trading fees.'], ['What can an agent do onchain?', 'Pick one or more skills when you hatch it: spot trades, limit and stop orders, earning on idle cash, shorts and hedges (2x max), borrowing against stocks, dividend yield, covered income, publishing a basket, and meme tokens. In this preview the replay simulates spot trades only.'], ['What does the mint give me?', 'An onchain agent passport (ERC-8004) on Robinhood Chain, its own vault and a public track record. The vault stays yours: the agent gets a key that can only trade, never withdraw.']];
     $('faqList').innerHTML = FAQ.map(function (q) { return '<details style="padding:16px 0;border-bottom:1px solid #e5e5e2"><summary style="font-size:16px;font-weight:600;display:flex;justify-content:space-between;gap:12px"><span>' + q[0] + '</span><span aria-hidden="true" style="color:#6b6b6b">+</span></summary><p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:#4a4a4a;max-width:640px">' + q[1] + '</p></details>'; }).join('');
   }
 
@@ -527,7 +557,7 @@
   document.addEventListener('pointerdown', function (e) {
     var b = e.target.closest && e.target.closest('[data-act]');
     if (b && !b.disabled && b.getAttribute('aria-disabled') !== 'true') sfx(sfxFor(b, b.getAttribute('data-act')));
-    var k = e.target.closest && e.target.closest('#dvKnob'); if (!k) return;
+    var k = e.target.closest && e.target.closest('#dvKnob'); if (!k || st.readonly) return;
     e.preventDefault(); k.focus(); sfx('key');
     var y0 = e.clientY, x0 = e.clientX, v0 = st.tune.lean === undefined ? lean(model().dna) : st.tune.lean;
     try { k.setPointerCapture(e.pointerId); } catch (er) {}
@@ -536,11 +566,11 @@
     k.addEventListener('pointermove', mv); k.addEventListener('pointerup', up); k.addEventListener('pointercancel', up);
   });
   document.addEventListener('wheel', function (e) {
-    var k = e.target.closest && e.target.closest('#dvKnob'); if (!k) return;
+    var k = e.target.closest && e.target.closest('#dvKnob'); if (!k || st.readonly) return;
     e.preventDefault(); setLean((st.tune.lean === undefined ? lean(model().dna) : st.tune.lean) + (e.deltaY < 0 ? 3 : -3));
   }, { passive: false });
   document.addEventListener('keydown', function (e) {
-    if (!e.target || e.target.id !== 'dvKnob') return;
+    if (!e.target || e.target.id !== 'dvKnob' || st.readonly) return;
     var v = st.tune.lean === undefined ? lean(model().dna) : st.tune.lean, step = { ArrowUp: 3, ArrowRight: 3, ArrowDown: -3, ArrowLeft: -3, PageUp: 10, PageDown: -10 }[e.key];
     if (e.key === 'Home') step = -v; if (e.key === 'End') step = 99 - v;
     if (step === undefined) return; e.preventDefault(); setLean(v + step);
@@ -550,21 +580,35 @@
     if (!b) return;
     var a = b.getAttribute('data-act');
     var m = model();
+    if (st.readonly && b.closest('#device') && /^(preset|watch|skill|conn|addx|rmx|knob|load|eject)$/.test(a)) return;
     if (a === 'hatch') startHatch(prompt() || currentExample());
     else if (a === 'idea') startHatch(IDEAS[+b.getAttribute('data-i')]);
     else if (a === 'twin') { $('prompt').value = '@degen_intern'; $('prompt').focus(); render(); }
     else if (a === 'ask') set({ askOpen: true });
-    else if (a === 'tg') set({ tg: true });
+    else if (a === 'tg') location.hash = '#/me';
+    else if (a === 'mintgo') { if (!ME.user) { st.flow = 'login'; refresh(); } else mintCurrent(); }
+    else if (a === 'login') { doLogin(b.getAttribute('data-m')); if (st.flow === 'login') { st.flow = null; mintCurrent(); } else if (ME.pendingCopy && findAgent(ME.pendingCopy)) doCopy(findAgent(ME.pendingCopy), Object.assign({}, copyCfg)); else route(); }
+    else if (a === 'logout') { ME.user = null; saveMe(); route(); }
+    else if (a === 'deposit') { st.mintOpen = true; st.flow = null; refresh(); try { $('device').scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (er) {} }
+    else if (a === 'copyopen') { var cpn = $('copyPanel'); if (cpn) cpn.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    else if (a === 'copy') { var src = findAgent(b.getAttribute('data-id')); if (!src) return; if (!ME.user) { ME.pendingCopy = src.id; saveMe(); location.hash = '#/me'; } else doCopy(src, Object.assign({}, copyCfg)); }
+    else if (a === 'copywhat') { var sc = b.getAttribute('data-scope'); if (sc === 'pub') { copyCfg.what = b.getAttribute('data-v'); renderAgentPage(findAgent(curId)); } else if (st.agentRef && st.agentRef.copyCfg) { st.agentRef.copyCfg.what = b.getAttribute('data-v'); saveMe(); renderMe(); } }
+    else if (a === 'demo' && st.agentRef) { st.agentRef.mode = st.agentRef.mode === 'demo' ? 'live' : 'demo'; saveMe(); render(); renderMe(); }
+    else if (a === 'pause' && st.agentRef) { st.agentRef.paused = !st.agentRef.paused; saveMe(); render(); renderMe(); }
+    else if (a === 'notify' && st.agentRef) { var nk = b.getAttribute('data-k'); st.agentRef.notify = st.agentRef.notify || {}; st.agentRef.notify[nk] = !st.agentRef.notify[nk]; saveMe(); renderMe(); }
+    else if (a === 'tglink') { if (ME.tg) ME.tg.linked = true; saveMe(); renderMe(); }
+    else if (a === 'copycode') { try { navigator.clipboard.writeText('/start ' + (ME.tg ? ME.tg.code : '')); } catch (er) {} b.textContent = 'Copied'; }
+    else if (a === 'bfilter') { boardFilter = b.getAttribute('data-v'); renderBoard(); }
     else if (a === 'join' || a === 'save') { if (a === 'save' && !m.born) return; e.preventDefault(); st.mintOpen = false; st.shareOpen = false; st.joined = true; st.saveOpen = st.face !== 'back'; refresh(); if (st.face === 'back') render(); }
     else if (a === 'hold') set({ answered: 'hold', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { patience: Math.min(99, m.dna.patience + 5) }) });
     else if (a === 'sell') set({ answered: 'sell', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { risk: Math.max(0, m.dna.risk - 10) }) });
     else if (a === 'share') { if (!m.born) return; set({ shareOpen: !st.shareOpen, mintOpen: false, saveOpen: false }); }
     else if (a === 'sound') { snd.on = !snd.on; try { localStorage.setItem('zq-sound', snd.on ? 'on' : 'off'); } catch (er) {} b.setAttribute('aria-checked', snd.on); b.classList.toggle('off', !snd.on); if (snd.on) sfx('switch'); }
-    else if (a === 'closeov') { st.mintOpen = false; st.shareOpen = false; st.saveOpen = false; refresh(); }
+    else if (a === 'closeov') { st.flow = null; st.mintOpen = false; st.shareOpen = false; st.saveOpen = false; refresh(); }
     else if (a === 'mode') { st.mode = b.getAttribute('data-m'); st.mintOpen = false; renderBack(); }
     else if (a === 'load') { var fi = $('mdFile'); if (fi) fi.click(); }
     else if (a === 'eject') { st.md = null; $('mdFile').value = ''; renderBack(); }
-    else if (a === 'replay') { if (m.born) set({ mintOpen: true, shareOpen: false, saveOpen: false }); else set({ rtick: st.tick, mintOpen: false, shareOpen: false, saveOpen: false }); }
+    else if (a === 'replay') set({ rtick: st.tick, mintOpen: false, shareOpen: false, saveOpen: false, flow: null });
     else if (a === 'evolve') set({ dnaPatch: Object.assign({}, st.dnaPatch || {}, m.prop.patch), xp: m.xp + 15, dismissed: true });
     else if (a === 'notnow') set({ dismissed: true });
     else if (a === 'bet') { var n = b.getAttribute('data-n'); set({ bet: st.bet === n ? null : n }); }
@@ -573,19 +617,18 @@
     else if (a === 'fork') startHatch(b.getAttribute('data-seed'));
     else if (a === 'skill') { var sk = b.getAttribute('data-k'), cnt = Object.keys(st.skills).filter(function (x) { return st.skills[x]; }).length; if (st.skills[sk] && cnt === 1) return; st.skills[sk] = !st.skills[sk]; render(); if (st.face === 'back') renderBack(); }
     else if (a === 'flip') flip(st.face === 'back' ? 'front' : 'back');
-    else if (a === 'mint') { st.mintOpen = !st.mintOpen; st.shareOpen = false; st.saveOpen = false; refresh(); }
+    else if (a === 'mint') { st.flow = null; st.mintOpen = !st.mintOpen; st.shareOpen = false; st.saveOpen = false; refresh(); }
     else if (a === 'preset') { var pz = b.getAttribute('data-p'); st.preset = pz; st.dnaPatch = Object.assign({}, st.dnaPatch || {}, TUNE_PRESETS[pz]); st.tune.lean = { ZEN: 10, DIP: 30, MOMO: 75, DEGEN: 95 }[pz]; renderBack(); }
     else if (a === 'watch') { var tk = b.getAttribute('data-t'); st.tune.watch[tk] = !st.tune.watch[tk]; renderBack(); }
     else if (a === 'conn') { var cn = b.getAttribute('data-c'); st.tune.conn[cn] = !st.tune.conn[cn]; renderBack(); }
     else if (a === 'addx') addHandle();
     else if (a === 'rmx') { st.tune.handles.splice(+b.getAttribute('data-i'), 1); renderBack(); }
     else if (a === 'simulate') {
-      if (st.phase === 'born') { st.mintOpen = true; st.shareOpen = false; st.saveOpen = false; flip('front'); return; }
-      st.subject = prompt() || currentExample(); st.phase = 'born'; st.xp = 0;
+      if (st.phase !== 'born') { st.subject = prompt() || currentExample(); st.phase = 'born'; st.xp = 0; }
       st.rtick = st.tick; st.dismissed = false; st.mintOpen = false; st.shareOpen = false; st.saveOpen = false;
       flip('front');
     }
-
+    if (a !== 'logout') saveMine();
   });
   $('prompt').addEventListener('input', function () { render(); });
   function addHandle() {
@@ -597,6 +640,9 @@
   document.addEventListener('keydown', function (e) { if (e.target && e.target.id === 'xHandle' && e.key === 'Enter') { e.preventDefault(); addHandle(); } });
   document.addEventListener('input', function (e) {
     var t = e.target; if (!t || !t.getAttribute) return;
+    var cp = t.getAttribute('data-copy');
+    if (cp) { var sc = t.getAttribute('data-scope'), c = sc === 'pub' ? copyCfg : (st.agentRef && st.agentRef.copyCfg); if (c) { c[cp] = +t.value; var cl = $('cs-' + cp + '-' + sc); if (cl) cl.textContent = cp === 'size' ? t.value + '%' : '−' + t.value + '%'; if (sc === 'my') saveMe(); } return; }
+    if (st.readonly) return;
     var k = t.getAttribute('data-dna'), u = t.getAttribute('data-tune'), v = parseInt(t.value, 10) || 0;
     if (!k && !u) return;
     st.preset = null;
@@ -607,6 +653,7 @@
     var pr = $('tv-preset'); if (pr) pr.textContent = 'PRESET: CUSTOM';
     document.querySelectorAll('#device [data-act=preset].on').forEach(function (x) { x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); });
     var rp = $('rulesPreview'); if (rp) rp.textContent = rulesText(model().dna, st.tune.limit);
+    saveMine();
   });
 
   document.addEventListener('change', function (e) {
@@ -614,13 +661,223 @@
     var f = t.files[0];
     if (f.size > 256 * 1024) { st.md = { name: f.name, size: f.size, lines: 0, title: 'too big, keep it under 256 KB' }; renderBack(); return; }
     var r = new FileReader();
-    r.onload = function () { var txt = String(r.result || ''), h = (txt.match(/^#\s+(.+)$/m) || [])[1]; st.md = { name: f.name, size: f.size, lines: txt.split('\n').length, title: h ? h.slice(0, 40) : '', text: txt }; renderBack(); };
+    r.onload = function () { var txt = String(r.result || ''), h = (txt.match(/^#\s+(.+)$/m) || [])[1]; st.md = { name: f.name, size: f.size, lines: txt.split('\n').length, title: h ? h.slice(0, 40) : '', text: txt }; renderBack(); saveMine(); };
     r.readAsText(f);
   });
   $('prompt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); startHatch(prompt() || currentExample()); } });
 
+  // ---------- accounts, my agents, public agents (preview, stored in this browser) ----------
+  var ME = { user: null, agents: [], tg: null, pendingCopy: null };
+  try { var saved = JSON.parse(localStorage.getItem('zq-me') || 'null'); if (saved) ME = Object.assign(ME, saved); } catch (e) {}
+  function saveMe() { try { localStorage.setItem('zq-me', JSON.stringify(ME)); } catch (e) {} }
+  function fakeAddr(seed) { var h = hash(seed + 'zq'), s = '0x'; for (var i = 0; i < 40; i++) { h = (Math.imul(h, 1103515245) + 12345) >>> 0; s += '0123456789abcdef'[h % 16]; } return s; }
+  function shortAddr(a) { return a ? a.slice(0, 6) + '…' + a.slice(-4) : ''; }
+  function agentStats(dna) {
+    var wk = [0, 1, 2, 3].map(function (si) { return equity(prices(si), dna, 48); });
+    var avg = wk.reduce(function (s, w) { return s + w.ret; }, 0) / 4, dd = Math.max.apply(null, wk.map(function (w) { return w.dd; })) * 100;
+    var all = [], base = 1; wk.forEach(function (w) { w.eq.forEach(function (v) { all.push(base * v); }); base *= w.eq[w.eq.length - 1]; });
+    return { avg: avg, dd: dd, score: Math.max(0, Math.min(100, 50 + 10 * (avg - dd))), all: all };
+  }
+  var WATCH0 = ['NVDA', 'TSLA', 'AAPL', 'AMZN', 'PLTR', 'COIN'];
+  function mkWatch(list) { var w = {}; WATCH0.forEach(function (t) { w[t] = list.indexOf(t) >= 0; }); return w; }
+  function mkSkills(list) { var s = {}; list.forEach(function (k) { s[k] = true; }); return s; }
+  var PUB = [
+    ['Zen Goblin', 'buy the dip, patient, calm, careful', 0, [], ['spot', 'orders'], ['NVDA', 'AAPL', 'PLTR'], 8, 212],
+    ['Calm Hamster', 'momentum, patient, careful', 2, ['fomo'], ['spot', 'earn'], ['NVDA', 'AMZN'], 6, 97],
+    ['Hype Oracle', 'chase green candles, hype, trade often', 1, [], ['spot', 'memes'], ['TSLA', 'COIN'], 15, 54],
+    ['Lucky Robot', 'momentum, careful, few trades', 7, ['risk', 'freq'], ['spot'], ['AAPL', 'AMZN', 'NVDA'], 8, 131],
+    ['Feral Gremlin', 'yolo, scalp often, chase', 6, ['patience', 'fomo', 'risk', 'freq', 'lean'], ['spot', 'perps', 'memes'], ['TSLA', 'PLTR', 'COIN'], 20, 18],
+    ['Quiet Oracle', 'patient long-term, add to winners, careful', 3, [], ['spot', 'dividends'], ['AAPL', 'AMZN'], 5, 176],
+    ['Shy Intern', 'trade rarely, careful sizing, only TSLA and AAPL', 4, ['lean'], ['spot', 'orders'], ['TSLA', 'AAPL'], 6, 41],
+    ['Degen Hamster', 'make me rich, make no mistakes', 5, ['patience', 'risk'], ['spot', 'memes', 'perps'], ['NVDA', 'TSLA', 'COIN'], 18, 263],
+    ['Sleepy Robot', 'buy the dip on NVDA, stay calm', 2, [], ['spot', 'earn'], ['NVDA'], 7, 64],
+    ['Tiny Gremlin', 'momentum only, never hold over the weekend', 1, ['freq'], ['spot', 'orders'], ['PLTR', 'COIN', 'TSLA'], 12, 23],
+    ['@mira_cap twin', '@mira_cap', 6, ['patience', 'fomo', 'risk', 'freq', 'lean', 'limit'], ['spot', 'basket'], ['NVDA', 'PLTR'], 10, 88],
+    ['Hype Intern', 'sell before earnings, rebuy after the drop, quick', 0, ['risk'], ['spot', 'orders', 'perps'], ['NVDA', 'AMZN', 'AAPL'], 9, 12]
+  ].map(function (a, i) {
+    var p = parse(a[1]).dna, st0 = agentStats(p);
+    return { id: 4108 + i * 37, name: a[0], prompt: a[1], preset: a[2], hidden: mkSkills(a[3]), promptPublic: a[3].length < 5, skills: mkSkills(a[4]), watch: mkWatch(a[5]), limit: a[6], copiers: a[7],
+      dna: Object.assign({}, p), lean: p.style === 'momentum' ? 72 : 28, conn: {}, handles: [], owner: fakeAddr(a[0]), mode: 'live', avg: st0.avg, dd: st0.dd, score: st0.score, all: st0.all, pub: true };
+  });
+  function findAgent(id) { id = +id; var a = null; ME.agents.forEach(function (x) { if (x.id === id) a = x; }); PUB.forEach(function (x) { if (x.id === id) a = x; }); return a; }
+  function isMine(a) { return a && !a.pub; }
+
+  // load any agent into the one device on the page
+  function loadAgent(a, ctx) {
+    st.ctx = ctx; st.readonly = ctx === 'public'; st.agentRef = a;
+    st.subject = a.prompt; st.phase = 'born'; st.btick = 0; st.rtick = undefined; st.tick = 999;
+    st.nameOverride = a.name; st.presetOverride = a.preset;
+    st.dnaPatch = Object.assign({}, a.dna); st.skills = Object.assign({}, a.skills);
+    st.tune = { limit: a.limit, watch: Object.assign({}, a.watch), conn: Object.assign({}, a.conn || {}), handles: (a.handles || []).slice(), lean: a.lean };
+    st.hidden = st.readonly ? (a.hidden || {}) : {}; st.md = a.md || null; st.preset = null; st.xp = a.xp || 0;
+    st.face = 'front'; st.mode = 'EQ'; st.mintOpen = st.shareOpen = st.saveOpen = false; st.flow = null; st.dismissed = true; st.answered = st.readonly ? 'hold' : (a.answered || null);
+    if ($('dvFace')) buildFace(); render();
+  }
+  function saveMine() {
+    if (st.ctx !== 'mine' || !st.agentRef) return;
+    var a = st.agentRef, m = model();
+    a.dna = Object.assign({}, m.dna); a.lean = st.tune.lean; a.limit = st.tune.limit; a.watch = Object.assign({}, st.tune.watch); a.skills = Object.assign({}, st.skills);
+    a.conn = Object.assign({}, st.tune.conn); a.handles = st.tune.handles.slice(); a.md = st.md ? { name: st.md.name, size: st.md.size, lines: st.md.lines, title: st.md.title } : null; a.xp = st.xp || 0; a.answered = st.answered || null;
+    var s0 = agentStats(a.dna); a.avg = s0.avg; a.dd = s0.dd; a.score = s0.score; a.all = s0.all;
+    saveMe();
+  }
+  function newAgentFrom(src, extra) {
+    var id = 5001; ME.agents.forEach(function (x) { id = Math.max(id, x.id + 1); });
+    var a = Object.assign({ id: id, created: Date.now(), mode: 'live', vault: 0, copiers: 0, notify: { trades: true, question: true, weekly: true }, owner: ME.user ? ME.user.address : '' }, src, extra || {});
+    var s0 = agentStats(a.dna); a.avg = s0.avg; a.dd = s0.dd; a.score = s0.score; a.all = s0.all; delete a.pub; delete a.hidden;
+    ME.agents.push(a); saveMe(); return a;
+  }
+  function mintCurrent() {
+    var m = model();
+    var a = newAgentFrom({ name: m.name, prompt: st.subject || m.subject, preset: m.preset, dna: Object.assign({}, m.dna), lean: st.tune.lean, limit: st.tune.limit, watch: Object.assign({}, st.tune.watch), skills: Object.assign({}, st.skills), conn: Object.assign({}, st.tune.conn), handles: st.tune.handles.slice(), md: st.md ? { name: st.md.name, size: st.md.size, lines: st.md.lines, title: st.md.title } : null });
+    st.mintOpen = false; st.flow = null; homeState = null;
+    location.hash = '#/me/' + a.id;
+  }
+  function doLogin(method) {
+    ME.user = { method: method, address: fakeAddr(method + Date.now()), since: Date.now() };
+    if (!ME.tg) ME.tg = { code: 'ZQ' + Math.random().toString(36).slice(2, 6).toUpperCase(), linked: false };
+    saveMe();
+  }
+  function doCopy(src, cfg) {
+    var dna = Object.assign({}, src.dna), hid = src.hidden || {};
+    ['patience', 'fomo', 'risk', 'freq'].forEach(function (k) { if (hid[k]) dna[k] = 50; });
+    var a = newAgentFrom({ name: src.name.replace(/ (copy|II)$/, '') + ' II', prompt: src.promptPublic ? src.prompt : 'copy of #' + src.id, preset: (src.preset + 3) % 8, dna: dna, lean: hid.lean ? 50 : src.lean,
+      limit: cfg.maxLoss, watch: Object.assign({}, src.watch), skills: Object.assign({}, src.skills), conn: {}, handles: [] }, { copyOf: src.id, copyCfg: cfg });
+    ME.pendingCopy = null; saveMe();
+    location.hash = '#/me/' + a.id;
+  }
+
+  // ---------- router ----------
+  var page = 'home', homeState = null, curId = null;
+  var copyCfg = { what: 'all', size: 50, maxLoss: 10 };
+  function moveDevice(slotId) { var w = $('devWrap'), s = $(slotId); if (w && s && w.parentNode !== s) s.appendChild(w); }
+  function show(p) {
+    ['pgHome', 'pgMe', 'pgBoard', 'pgAgent'].forEach(function (id) { var el = $(id); if (el) el.hidden = id !== { home: 'pgHome', me: 'pgMe', board: 'pgBoard', agent: 'pgAgent' }[p]; });
+    var sticky = document.querySelector('.sticky'); if (sticky) sticky.style.display = p === 'home' ? '' : 'none';
+  }
+  function route() {
+    var h = location.hash || '';
+    var mm = h.match(/^#\/(me|leaderboard|agent)(?:\/(\d+))?/);
+    var next = mm ? { me: 'me', leaderboard: 'board', agent: 'agent' }[mm[1]] : 'home';
+    if (page === 'home' && next !== 'home') { homeState = JSON.parse(JSON.stringify(st)); delete homeState.agentRef; }
+    if (next === 'home') {
+      moveDevice('heroDevCol');
+      if (page !== 'home') { if (homeState) { Object.keys(st).forEach(function (k) { delete st[k]; }); Object.assign(st, homeState); } st.ctx = 'home'; st.readonly = false; st.hidden = {}; st.agentRef = null; st.nameOverride = null; st.presetOverride = undefined; st.face = 'front'; buildFace(); render(); }
+      if (h === '#/') try { window.scrollTo(0, 0); } catch (e) {}
+    } else if (next === 'board') {
+      renderBoard();
+    } else if (next === 'agent') {
+      var a = findAgent(mm[2]);
+      if (a && isMine(a)) { location.replace('#/me/' + a.id); return; }
+      curId = a ? a.id : null; moveDevice('agDevSlot'); if (a) loadAgent(a, 'public'); renderAgentPage(a);
+    } else if (next === 'me') {
+      var mine = mm[2] ? findAgent(mm[2]) : ME.agents[ME.agents.length - 1];
+      if (mine && !isMine(mine)) mine = null;
+      curId = mine ? mine.id : null; moveDevice('meDevSlot'); if (ME.user && mine) loadAgent(mine, 'mine');
+      renderMe();
+    }
+    if (next !== 'home') try { window.scrollTo(0, 0); } catch (e) {}
+    page = next; show(next); renderHeader();
+  }
+  window.addEventListener('hashchange', route);
+  function renderHeader() {
+    var b = $('hdrAcct'); if (!b) return;
+    b.textContent = ME.user ? 'My agents' + (ME.agents.length ? ' · ' + ME.agents.length : '') : 'Log in';
+    document.querySelectorAll('[data-nav]').forEach(function (a) { a.style.color = a.getAttribute('data-nav') === page ? '#111' : '#4a4a4a'; a.style.fontWeight = a.getAttribute('data-nav') === page ? '700' : '500'; });
+  }
+  function badge(t, on) { return '<span class="mono" style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 7px;border-radius:5px;' + (on ? 'background:#111;color:#c6f432' : 'background:#f1f1ee;color:#4a4a4a') + '">' + t + '</span>'; }
+  function tradesTable(trades) {
+    if (!trades.length) return '<span style="font-size:14px;color:#6b6b6b">No trades yet. It is waiting for its setup.</span>';
+    var N = prices(0).length, now = Date.now(), buy = null, rows = [];
+    trades.forEach(function (t) {
+      var d = new Date(now - (N - t.i) * 3600 * 1000), tm = d.toUTCString().slice(0, 3) + ' ' + ('0' + d.getUTCHours()).slice(-2) + ':00';
+      var pnl = '';
+      if (t.act === 'BUY') buy = t.price; else if (buy) { var r = (t.price / buy - 1) * 100; pnl = '<span style="color:' + (r >= 0 ? UP : DOWN) + '">' + fmt(r) + '</span>'; buy = null; }
+      rows.push('<div class="mono" style="display:grid;grid-template-columns:70px 52px 60px 1fr 64px;gap:8px;padding:8px 0;border-bottom:1px solid #f1f1ee;font-size:12px"><span style="color:#6b6b6b">' + tm + '</span><span style="font-weight:700;color:' + (t.act === 'BUY' ? '#111' : '#4a4a4a') + '">' + t.act + '</span><span>NVDA</span><span>$' + t.price.toFixed(2) + ' · ' + t.qty.toFixed(2) + '</span><span style="text-align:right">' + pnl + '</span></div>');
+    });
+    return '<div class="mono" style="display:grid;grid-template-columns:70px 52px 60px 1fr 64px;gap:8px;padding-bottom:6px;font-size:10px;letter-spacing:.06em;color:#6b6b6b;border-bottom:1px solid #e5e5e2"><span>TIME</span><span>SIDE</span><span>TOKEN</span><span>PRICE · QTY</span><span style="text-align:right">P&amp;L</span></div>' + rows.reverse().join('');
+  }
+  function toggleRow(act, on, title, desc, extra) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><strong style="font-size:15px">' + title + '</strong><span style="font-size:13px;line-height:1.45;color:#6b6b6b">' + desc + '</span></span><button type="button" role="switch" aria-checked="' + !!on + '" aria-label="' + title + '" class="dv-tog' + (on ? ' on' : '') + '" data-act="' + act + '"' + (extra || '') + '><span></span></button></div>';
+  }
+  function loginCard(why) {
+    return '<div class="card" style="max-width:520px;gap:14px"><span class="eyebrow">Log in</span><strong style="font-size:22px">' + (why || 'Log in to see your agents') + '</strong><span style="font-size:15px;line-height:1.5;color:#4a4a4a">Use Google or your wallet. Signing in with a wallet is a free signature, no gas.</span><div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn dark" data-act="login" data-m="google">Continue with Google</button><button type="button" class="btn" data-act="login" data-m="wallet">Connect wallet</button></div><span style="font-size:12px;line-height:1.45;color:#6b6b6b">Preview: no real account or wallet is connected. Your agents are saved in this browser.</span></div>';
+  }
+  function renderMe() {
+    var head = '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px"><div style="display:flex;flex-direction:column;gap:8px"><span class="eyebrow">Dashboard</span><h2>My agents</h2></div>';
+    if (ME.user) head += '<span style="display:flex;align-items:center;gap:10px;font-size:13px;color:#4a4a4a">' + badge(ME.user.method === 'google' ? 'GOOGLE' : 'WALLET') + '<span class="mono">' + shortAddr(ME.user.address) + '</span><button type="button" class="btn sm" data-act="logout">Log out</button></span>';
+    head += '</div>';
+    setHTML('meHead', head);
+    $('meBody').hidden = !ME.user || !curId;
+    if (!ME.user) { var pc = ME.pendingCopy ? findAgent(ME.pendingCopy) : null; setHTML('meLogin', loginCard(pc ? 'Log in to copy ' + esc(pc.name) : '')); return; }
+    if (!ME.agents.length) { setHTML('meLogin', '<div class="card" style="max-width:520px;gap:12px"><strong style="font-size:20px">No agents yet</strong><span style="font-size:15px;line-height:1.5;color:#4a4a4a">Describe one in a sentence or copy one from the leaderboard. You can create as many as you want.</span><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn lime" href="#/">Create an agent</a><a class="btn" href="#/leaderboard">Browse the leaderboard</a></div></div>'); return; }
+    setHTML('meLogin', '');
+    var a = findAgent(curId); if (!a) return;
+    var m = model(), p = '';
+    p += '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' + ME.agents.map(function (x) { var on = x.id === a.id; return '<a href="#/me/' + x.id + '" style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:999px;text-decoration:none;color:#111;border:1.5px solid ' + (on ? '#111' : '#e5e5e2') + ';background:' + (on ? '#f6ffd9' : '#fff') + '"><img alt="" src="' + robot(x.prompt, { preset: x.preset, stage: 2, mood: 'happy' }) + '" style="width:28px;height:28px;background:#0f0f0f;border-radius:50%"><span style="font-size:14px;font-weight:600">' + esc(x.name) + '</span>' + badge(x.mode === 'demo' ? 'DEMO' : 'LIVE', x.mode !== 'demo') + '</a>'; }).join('') + '<a href="#/" class="btn sm">+ New agent</a></div>';
+    var rank = boardRows().map(function (r) { return r.id; }).indexOf(a.id) + 1;
+    var kpi = function (l, v, c) { return '<div style="border:1px solid #e5e5e2;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><span class="mono" style="font-size:11px;color:#6b6b6b">' + l + '</span><span class="mono" style="font-weight:700;font-size:18px;color:' + (c || '#111') + '">' + v + '</span></div>'; };
+    var bal = a.mode === 'demo' ? '$' + (1000 * (m.sim.eq[m.sim.eq.length - 1] || 1)).toFixed(0) + ' virtual' : '$' + (a.vault || 0).toFixed(0);
+    p += '<div class="card" style="gap:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><strong style="font-size:20px">' + esc(a.name) + '</strong><span class="mono" style="font-size:12px;color:#6b6b6b">ERC-8004 #' + a.id + (a.copyOf ? ' · copy of <a href="#/agent/' + a.copyOf + '">#' + a.copyOf + '</a>' : '') + '</span></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">' + kpi(a.mode === 'demo' ? 'DEMO BALANCE' : 'VAULT', bal) + kpi('7-DAY', fmt(m.sim.ret), m.sim.ret >= 0 ? UP : DOWN) + kpi('SCORE', a.score.toFixed(0)) + kpi('RANK', '#' + rank) + '</div>' +
+      (a.mode !== 'demo' && !a.vault ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:#f7f7f5;border-radius:10px;padding:10px 12px"><span style="font-size:14px;color:#4a4a4a">The vault is empty, so the agent is waiting. Fund it or switch on demo mode.</span><button type="button" class="btn sm dark" data-act="deposit">Fund the vault</button></div>' : '') + '</div>';
+    p += '<div class="card" style="gap:14px"><span class="eyebrow">Settings</span>' +
+      toggleRow('demo', a.mode === 'demo', 'Demo mode', 'Trades $1,000 of virtual cash instead of the vault. Switch it off to go live.') +
+      toggleRow('pause', a.paused, 'Pause trading', 'Stops new trades. Open positions stay as they are.') +
+      '<span style="font-size:13px;color:#6b6b6b">Personality, risk, markets and signals are on the back of the device: press TUNE.</span></div>';
+    if (a.copyOf) {
+      var c = a.copyCfg || copyCfg;
+      p += '<div class="card" style="gap:12px"><span class="eyebrow">Copying #' + a.copyOf + '</span>' + copyControls(c, 'my') + '</div>';
+    }
+    if (!a.answered) p += '<div class="card" style="gap:10px"><span class="eyebrow">Today’s question</span><span style="font-size:16px">NVDA reports earnings tomorrow. Hold through it, or sell before?</span><div style="display:flex;gap:8px"><button type="button" class="btn sm" data-act="hold">Hold</button><button type="button" class="btn sm" data-act="sell">Sell before</button></div><span style="font-size:12px;color:#6b6b6b">Your answer tunes how it trades. Skipping is fine, it just learns slower.</span></div>';
+    var tg = ME.tg || {};
+    p += '<div class="card" style="gap:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Telegram</span>' + badge(tg.linked ? 'LINKED' : 'NOT LINKED', tg.linked) + '</div>' +
+      (tg.linked ? '<span style="font-size:15px;line-height:1.5">Your agents message you in Telegram. Reply to a question right in the chat.</span>' :
+        '<span style="font-size:15px;line-height:1.5">Get trades, the daily question and weekly reports from all your agents in one chat.</span><ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#2f2f2f"><li>Open the ZeroIQ bot in Telegram.</li><li>Send <span class="mono" style="background:#f1f1ee;padding:2px 6px;border-radius:4px">/start ' + (tg.code || '') + '</span></li><li>The bot links this account and every agent on it.</li></ol><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn sm" data-act="copycode">Copy the command</button><button type="button" class="btn sm" disabled style="opacity:.5;cursor:not-allowed" title="The bot opens with Season 0">Open bot · Season 0</button><button type="button" class="btn sm" data-act="tglink">Preview: mark as linked</button></div>') +
+      '<div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid #f1f1ee;padding-top:12px">' + toggleRow('notify', a.notify && a.notify.trades, 'Trades', 'A message for every buy and sell.', ' data-k="trades"') + toggleRow('notify', a.notify && a.notify.question, 'Daily question', 'One question a day, answer with a tap.', ' data-k="question"') + toggleRow('notify', a.notify && a.notify.weekly, 'Weekly report', 'Score, rank and the onchain record.', ' data-k="weekly"') + '</div></div>';
+    p += '<div class="card" style="gap:10px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Trade history · last 7 days</span><span class="chip">sample prices</span></div>' + tradesTable(m.trades) + '</div>';
+    setHTML('mePanel', p);
+  }
+  function copyControls(c, scope) {
+    var opt = function (v, t, d) { var on = c.what === v; return '<button type="button" data-act="copywhat" data-v="' + v + '" data-scope="' + scope + '" aria-pressed="' + on + '" style="flex:1 1 0;text-align:left;cursor:pointer;border-radius:12px;padding:10px 12px;font:inherit;border:1.5px solid ' + (on ? '#111' : '#e5e5e2') + ';background:' + (on ? '#f6ffd9' : '#fff') + '"><strong style="display:block;font-size:14px">' + t + '</strong><span style="font-size:12px;color:#6b6b6b">' + d + '</span></button>'; };
+    return '<div style="display:flex;gap:8px;flex-wrap:wrap">' + opt('all', 'Copy everything', 'its settings, markets and skills') + opt('trades', 'Mirror trades only', 'it trades, your vault follows') + '</div>' +
+      '<label style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font-size:14px"><span>Size vs. its positions</span><strong class="mono" id="cs-size-' + scope + '">' + c.size + '%</strong></span><input type="range" min="5" max="200" step="5" value="' + c.size + '" data-copy="size" data-scope="' + scope + '" style="accent-color:#111"></label>' +
+      '<label style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font-size:14px"><span>Your loss limit per day</span><strong class="mono" id="cs-maxLoss-' + scope + '">−' + c.maxLoss + '%</strong></span><input type="range" min="3" max="20" value="' + c.maxLoss + '" data-copy="maxLoss" data-scope="' + scope + '" style="accent-color:#ff7a6b"></label>';
+  }
+  function boardRows() { return PUB.concat(ME.agents.filter(function () { return !!ME.user; })).slice().sort(function (x, y) { return y.score - x.score; }); }
+  var boardFilter = 'all';
+  function renderBoard() {
+    var rows = boardRows().filter(function (a) { return boardFilter === 'all' || (boardFilter === 'public' ? !Object.keys(a.hidden || {}).length : a.copiers > 50); });
+    var tabs = [['all', 'All agents'], ['public', 'Fully public settings'], ['copied', 'Most copied']].map(function (t) { var on = boardFilter === t[0]; return '<button type="button" data-act="bfilter" data-v="' + t[0] + '" aria-pressed="' + on + '" class="btn sm" style="' + (on ? 'background:#111;color:#fff;border-color:#111' : '') + '">' + t[1] + '</button>'; }).join('');
+    var h = '<div style="display:flex;flex-wrap:wrap;gap:8px">' + tabs + '</div><div class="card" style="gap:0;padding:8px 16px;overflow-x:auto"><div class="mono lb-row" style="font-size:10px;letter-spacing:.06em;color:#6b6b6b;border-bottom:1px solid #e5e5e2"><span>#</span><span>AGENT</span><span class="hide-sm">OWNER</span><span style="text-align:right">AVG / WK</span><span class="hide-sm" style="text-align:right">MAX DD</span><span style="text-align:right">SCORE</span><span class="hide-sm" style="text-align:right">COPIERS</span><span class="hide-sm">SETTINGS</span><span></span></div>';
+    rows.forEach(function (a, i) {
+      var hid = Object.keys(a.hidden || {}).length, mine = isMine(a);
+      h += '<div class="lb-row" style="border-bottom:1px solid #f1f1ee;font-size:14px"><span class="mono" style="color:#6b6b6b">' + (i + 1) + '</span><a href="#/agent/' + a.id + '" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#111;min-width:0"><img alt="" src="' + robot(a.prompt, { preset: a.preset, stage: 3, mood: a.avg >= 0 ? 'happy' : 'sad' }) + '" style="width:36px;height:36px;background:#0f0f0f;border-radius:8px;flex:0 0 auto"><span style="display:flex;flex-direction:column;min-width:0"><strong style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(a.name) + (mine ? ' ' + badge('YOU', true) : '') + '</strong><span class="mono" style="font-size:11px;color:#6b6b6b">8004 #' + a.id + '</span></span></a>' +
+        '<span class="mono hide-sm" style="font-size:12px;color:#4a4a4a">' + shortAddr(a.owner) + '</span><span class="mono" style="text-align:right;color:' + (a.avg >= 0 ? UP : DOWN) + '">' + fmt(a.avg) + '</span><span class="mono hide-sm" style="text-align:right;color:#4a4a4a">' + a.dd.toFixed(1) + '%</span><span class="mono" style="text-align:right;font-weight:700">' + a.score.toFixed(0) + '</span><span class="mono hide-sm" style="text-align:right">' + (a.copiers || 0) + '</span><span class="hide-sm">' + badge(hid ? hid + ' PRIVATE' : 'PUBLIC', !hid) + '</span><a class="btn sm" href="#/agent/' + a.id + '">Open</a></div>';
+    });
+    h += '</div>';
+    setHTML('boardBody', h);
+  }
+  function renderAgentPage(a) {
+    if (!a) { setHTML('agInfo', '<div class="card"><strong>Agent not found</strong><a href="#/leaderboard">Back to the leaderboard</a></div>'); return; }
+    var hid = Object.keys(a.hidden || {}), m = model();
+    var kpi = function (l, v, c) { return '<div style="border:1px solid #e5e5e2;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><span class="mono" style="font-size:11px;color:#6b6b6b">' + l + '</span><span class="mono" style="font-weight:700;font-size:18px;color:' + (c || '#111') + '">' + v + '</span></div>'; };
+    var rank = boardRows().map(function (r) { return r.id; }).indexOf(a.id) + 1;
+    var p = '<a href="#/leaderboard" style="font-size:14px;color:#4a4a4a">← Leaderboard</a>';
+    p += '<div style="display:flex;flex-direction:column;gap:8px"><span class="eyebrow">Agent · ERC-8004 #' + a.id + '</span><h2 style="margin:0">' + esc(a.name) + '</h2><span class="mono" style="font-size:13px;color:#4a4a4a">owner ' + shortAddr(a.owner) + ' · ' + (a.copiers || 0) + ' copiers · rank #' + rank + '</span></div>';
+    p += '<div class="card" style="gap:8px"><span class="eyebrow">Personality</span><span style="font-size:17px;line-height:1.45">' + (a.promptPublic ? '“' + esc(a.prompt) + '”' : '<span style="color:#6b6b6b">The owner keeps the prompt private.</span>') + '</span>' +
+      '<span style="font-size:13px;line-height:1.5;color:#6b6b6b">' + (hid.length ? 'Not shared: ' + hid.join(', ') + '. On the device these show as grey, centred faders. ' : 'All settings are public. ') + 'Press TUNE on the device to see them.</span></div>';
+    p += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">' + kpi('AVG / WEEK', fmt(a.avg), a.avg >= 0 ? UP : DOWN) + kpi('MAX DD', a.dd.toFixed(1) + '%') + kpi('SCORE', a.score.toFixed(0)) + kpi('TRADES · 7D', m.trades.length) + '</div>';
+    p += '<div class="card" id="copyPanel" style="gap:14px;border:1.5px solid #111"><span class="eyebrow">Copy this agent</span><span style="font-size:15px;line-height:1.5;color:#2f2f2f">You get your own agent with its own vault. Change anything after you copy.</span>' + copyControls(copyCfg, 'pub') + '<button type="button" class="btn lime" data-act="copy" data-id="' + a.id + '">Copy &amp; edit</button><span style="font-size:12px;color:#6b6b6b">Private settings start in the middle. You set them yourself.</span></div>';
+    p += '<div class="card" style="gap:10px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Trade history · last 7 days</span><span class="chip">sample prices</span></div>' + tradesTable(m.trades) + '</div>';
+    setHTML('agInfo', p);
+  }
+
+  st.ctx = 'home';
   renderStatic();
   render();
+  route();
+  try { $('ghostImg1').src = robot('make me rich', { preset: 5, stage: 2, mood: 'happy' }); $('ghostImg2').src = robot('quiet oracle', { preset: 3, stage: 3, mood: 'ok' }); } catch (e) {}
   if (!reduce) setTimeout(typeTick, 600); else $('prompt').placeholder = EXAMPLES[0];
   if (!reduce) {
     setInterval(function () {
