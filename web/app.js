@@ -226,7 +226,7 @@
     var g = ''; for (var i = 0; i < 12; i++) g += '<span></span>';
     var el = $('device');
     el.innerHTML = '<svg class="dv-noise" aria-hidden="true"><filter id="dvn"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#dvn)" opacity="0.6"/></svg><span class="dv-hl" aria-hidden="true"></span>' +
-      '<div class="dv-top"><div style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss">ZEROIQ</span><span class="dv-eng" id="dvModel">AGENT-01</span></div><div style="display:flex;align-items:center;gap:10px"><button type="button" class="dv-snd' + (snd.on ? '' : ' off') + '" data-act="sound" aria-pressed="' + snd.on + '" aria-label="Button sounds">SND</button><span class="dv-eng">PAPER</span><span class="dv-led" aria-hidden="true"></span><span class="dv-grille" aria-hidden="true">' + g + '</span></div></div>' +
+      '<div class="dv-top"><div style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss">ZEROIQ</span><span class="dv-eng" id="dvModel">AGENT-01</span></div><div style="display:flex;align-items:center;gap:10px"><span style="display:flex;align-items:center;gap:6px"><button type="button" role="switch" class="dv-snd' + (snd.on ? '' : ' off') + '" data-act="sound" aria-checked="' + snd.on + '" aria-label="Button sounds"><span></span></button><span class="dv-eng" aria-hidden="true">SND</span></span><span class="dv-eng">PAPER</span><span class="dv-led" aria-hidden="true"></span><span class="dv-grille" aria-hidden="true">' + g + '</span></div></div>' +
       '<div id="dvFace" class="dv-face"></div>' +
       '<div class="dv-foot"><span class="dv-screw" aria-hidden="true"></span><span class="dv-eng" id="dvFoot" style="color:#6d7079;font-weight:600"></span><span class="dv-screw" aria-hidden="true"></span></div>';
     el._h = null; buildFace();
@@ -556,7 +556,7 @@
     else if (a === 'hold') set({ answered: 'hold', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { patience: Math.min(99, m.dna.patience + 5) }) });
     else if (a === 'sell') set({ answered: 'sell', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { risk: Math.max(0, m.dna.risk - 10) }) });
     else if (a === 'share') { if (!m.born) return; set({ shareOpen: !st.shareOpen, mintOpen: false, saveOpen: false }); }
-    else if (a === 'sound') { snd.on = !snd.on; try { localStorage.setItem('zq-sound', snd.on ? 'on' : 'off'); } catch (er) {} b.setAttribute('aria-pressed', snd.on); b.classList.toggle('off', !snd.on); if (snd.on) sfx('beep'); }
+    else if (a === 'sound') { snd.on = !snd.on; try { localStorage.setItem('zq-sound', snd.on ? 'on' : 'off'); } catch (er) {} b.setAttribute('aria-checked', snd.on); b.classList.toggle('off', !snd.on); if (snd.on) sfx('switch'); }
     else if (a === 'closeov') { st.mintOpen = false; st.shareOpen = false; st.saveOpen = false; refresh(); }
     else if (a === 'mode') { st.mode = b.getAttribute('data-m'); st.mintOpen = false; renderBack(); }
     else if (a === 'load') { var fi = $('mdFile'); if (fi) fi.click(); }

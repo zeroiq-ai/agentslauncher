@@ -117,12 +117,12 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 .dv-rules-h{color:#7d9a2a;font-size:9px;letter-spacing:.12em}
 .dv-rules pre{max-height:66px;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-width:thin;scrollbar-color:#4d5f1c transparent;margin:0;font:500 11px/1.5 'JetBrains Mono',monospace;color:#c6f432;white-space:pre-wrap}
 .dv-rules pre::-webkit-scrollbar{width:4px}.dv-rules pre::-webkit-scrollbar-thumb{background:#4d5f1c;border-radius:2px}
-.dv-snd{border:0;cursor:pointer;font:800 9px 'JetBrains Mono',monospace;letter-spacing:.12em;padding:3px 6px;min-height:22px;border-radius:4px;color:#c6f432;background:#15161a;box-shadow:inset 0 1px 2px rgba(0,0,0,.7)}.dv-snd.off{color:#5a5d66;text-decoration:line-through}.dv-snd:focus-visible{outline:2px solid #c6f432;outline-offset:2px}
+.dv-snd{position:relative;width:30px;height:16px;padding:0;border:0;cursor:pointer;border-radius:5px;background:linear-gradient(90deg,#ff7a1a 0 50%,#08090a 50%);box-shadow:inset 0 2px 3px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.1)}.dv-snd span{position:absolute;top:2px;left:15px;width:13px;height:12px;border-radius:3px;background:repeating-linear-gradient(90deg,#c9cbd1 0 1px,#8d9098 1px 3px);box-shadow:0 1px 2px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.6);transition:left .12s ease-out}.dv-snd.off span{left:15px}.dv-snd:not(.off) span{left:2px}.dv-snd:not(.off){background:#08090a}.dv-snd:focus-visible{outline:2px solid #c6f432;outline-offset:2px}
 .dv-slot{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;background:#1c1d21;box-shadow:inset 0 2px 4px rgba(0,0,0,.65),0 1px 0 rgba(255,255,255,.06);border:1px dashed #4a4d55}
 .dv-mouth{width:44px;height:10px;flex:0 0 auto;border-radius:3px;background:#08090a;box-shadow:inset 0 3px 4px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.1)}
 .dv-slotbtn{padding:0 12px;min-height:32px;border-radius:7px;font:800 10px 'JetBrains Mono',monospace;letter-spacing:.1em;flex:0 0 auto}
 @media (max-width:400px){.dv{padding:16px 12px 14px;border-radius:28px}.dv-round{width:46px;height:46px}.dv-mint{width:128px;font-size:13px}.dv-sim{width:110px;font-size:12px}.dv-keys{padding:0}.dv-panel{padding:12px 10px}}
-@media (prefers-reduced-motion:reduce){.dv-led{animation:none}.dv-tog span,.dv-key{transition:none}}
+@media (prefers-reduced-motion:reduce){.dv-led{animation:none}.dv-tog span,.dv-key,.dv-snd span{transition:none}}
 
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
@@ -293,6 +293,6 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 </footer>
 <div class="sticky"><a href="#top" class="btn lime" style="flex:1 1 auto">Hatch your AI trader</a></div>
 
-<script src="app.js?v=11"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
