@@ -214,38 +214,138 @@
     var watch = Object.keys(st.tune.watch).filter(function (t) { return st.tune.watch[t]; });
     return (d.style === 'momentum' ? 'BUY after ' + k.momN + ' green candle' + (k.momN > 1 ? 's' : '') : 'BUY after ' + k.dipN + ' red candle' + (k.dipN > 1 ? 's' : '')) + ' · size ' + Math.round(k.size * 100) + '% of cash\n' +
       'SELL at +' + ((k.tp - 1) * 100).toFixed(1) + '% or −' + ((1 - k.sl) * 100).toFixed(1) + '% · hold ≥ ' + k.minHold + 'h\n' +
-      'stops for the day at −' + limit + '% · trades ' + (watch.length ? watch.join(' ') : 'nothing yet') + '\nskills: ' + skillNames().join(', ');
+      'stops for the day at −' + limit + '% · trades ' + (watch.length ? watch.join(' ') : 'nothing yet') + '\nskills: ' + skillNames().join(', ') + (st.md ? ' · playbook: ' + st.md.name : '');
   }
   var TUNE_PRESETS = { ZEN: { patience: 85, fomo: 10, risk: 25, freq: 25, style: 'dip' }, DIP: { patience: 65, fomo: 25, risk: 45, freq: 45, style: 'dip' }, MOMO: { patience: 30, fomo: 70, risk: 55, freq: 60, style: 'momentum' }, DEGEN: { patience: 10, fomo: 95, risk: 95, freq: 90, style: 'momentum' } };
-  function mintPanel(m) {
-    return '<div style="border:1.5px solid #111;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff"><strong style="font-size:15px">Mint ' + esc(m.name) + ' · 0.001 ETH</strong><span style="font-size:14px;line-height:1.45;color:#2f2f2f">You get an onchain agent passport (ERC-8004) on Robinhood Chain, a seat in Season 0 and a public track record. Trading stays paper.</span><span style="font-size:12px;line-height:1.45;color:#6b6b6b">Minting opens with Season 0. This preview charges nothing and asks for no wallet.</span><button type="button" class="btn dark sm" data-act="join" style="align-self:flex-start">Join the mint list</button></div>';
+  // ---------- device (2000s handheld, same size on both faces) ----------
+  var SK_SHORT = { spot: 'SPOT', orders: 'LIMITS', earn: 'EARN', perps: 'SHORTS', borrow: 'BORROW', dividends: 'DIVIDEND', income: 'INCOME', basket: 'BASKET', memes: 'MEMES' };
+  var CONN = [['news', 'News headlines', 'BETA · headlines on its stocks'], ['top', 'Top agents', 'BETA · what the best agents did'], ['x', 'X accounts', 'BETA · posts from accounts below'], ['chain', 'Onchain flows', 'SOON · Robinhood Chain pools', 'soon']];
+  var TUNE_ICON = '<svg aria-hidden="true" viewBox="0 0 24 24" style="width:20px;height:20px;display:block;transform:rotate(90deg)"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20.5 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function kc(btn, label) { return '<div class="dv-kc">' + btn + '<span class="dv-eng">' + label + '</span></div>'; }
+  function buildShell() {
+    var g = ''; for (var i = 0; i < 12; i++) g += '<span></span>';
+    var el = $('device');
+    el.innerHTML = '<svg class="dv-noise" aria-hidden="true"><filter id="dvn"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#dvn)" opacity="0.6"/></svg><span class="dv-hl" aria-hidden="true"></span>' +
+      '<div class="dv-top"><div style="display:flex;align-items:baseline;gap:8px"><span class="dv-emboss">ZEROIQ</span><span class="dv-eng" id="dvModel">AGENT-01</span></div><div style="display:flex;align-items:center;gap:10px"><span class="dv-eng">PAPER</span><span class="dv-led" aria-hidden="true"></span><span class="dv-grille" aria-hidden="true">' + g + '</span></div></div>' +
+      '<div id="dvFace" class="dv-face"></div>' +
+      '<div class="dv-foot"><span class="dv-screw" aria-hidden="true"></span><span class="dv-eng" id="dvFoot" style="color:#6d7079;font-weight:600"></span><span class="dv-screw" aria-hidden="true"></span></div>';
+    el._h = null; buildFace();
   }
-  function backHTML(m) {
-    var d = m.dna, t = st.tune, b = '';
-    var vs = function (key, label, val) { return '<label style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1 1 0"><span class="mono" id="tv-' + key + '" style="font-size:12px;color:#c6f432">' + val + '</span><input type="range" min="0" max="99" value="' + val + '" data-dna="' + key + '" aria-label="' + label + '" style="writing-mode:vertical-lr;direction:rtl;width:28px;height:112px;accent-color:#c6f432"><span class="mono" style="font-size:10px;letter-spacing:.06em;color:#a3a3a0">' + label + '</span></label>'; };
-    b += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="eyebrow">Tune · ' + esc(m.name) + '</span><button type="button" class="btn sm" data-act="flip" aria-label="Flip back to the agent card">↺ Card</button></div>';
-    b += '<div style="background:#0f0f0f;border-radius:14px;padding:14px;color:#f2f2f2;display:flex;flex-direction:column;gap:12px">';
-    b += '<div style="display:flex;justify-content:space-between;align-items:center"><span class="mono" style="font-size:11px;letter-spacing:.06em;color:#a3a3a0">EQUALIZER</span><span class="mono" id="tv-preset" style="font-size:11px;color:#c6f432">PRESET: ' + (st.preset || 'CUSTOM') + '</span></div>';
-    b += '<div style="display:flex;justify-content:space-between;gap:4px">' + vs('patience', 'PATIENCE', d.patience) + vs('fomo', 'FOMO', d.fomo) + vs('risk', 'RISK', d.risk) + vs('freq', 'ACTIVITY', d.freq) + '<label style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1 1 0"><span class="mono" id="tv-limit" style="font-size:12px;color:#ff7a6b">−' + t.limit + '%</span><input type="range" min="3" max="20" value="' + t.limit + '" data-tune="limit" aria-label="Daily loss limit" style="writing-mode:vertical-lr;direction:rtl;width:28px;height:112px;accent-color:#ff7a6b"><span class="mono" style="font-size:10px;letter-spacing:.06em;color:#a3a3a0">LOSS/DAY</span></label></div>';
-    b += '<div style="display:flex;gap:6px">' + ['ZEN', 'DIP', 'MOMO', 'DEGEN'].map(function (p) { var on = st.preset === p; return '<button type="button" data-act="preset" data-p="' + p + '" class="mono" style="flex:1 1 auto;min-height:36px;font-size:11px;font-weight:700;letter-spacing:.06em;border-radius:8px;cursor:pointer;border:1px solid ' + (on ? '#c6f432' : '#3a3a3a') + ';background:' + (on ? '#c6f432' : '#1a1a1a') + ';color:' + (on ? '#111' : '#f2f2f2') + '">' + p + '</button>'; }).join('') + '</div>';
-    b += '<label style="display:flex;flex-direction:column;gap:4px"><span class="mono" style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:.06em;color:#a3a3a0"><span>DIP BUYER</span><span>MOMENTUM</span></span><input type="range" min="0" max="99" value="' + (d.style === 'momentum' ? 80 : 20) + '" data-tune="style" aria-label="Dip buyer to momentum" style="width:100%;accent-color:#c6f432"></label>';
-    b += '</div>';
-    b += '<div style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">Watchlist</span><div style="display:flex;flex-wrap:wrap;gap:6px">' + Object.keys(t.watch).map(function (k) { var on = t.watch[k]; return '<button type="button" data-act="watch" data-t="' + k + '" aria-pressed="' + on + '" class="mono" style="font-size:12px;font-weight:700;border-radius:8px;padding:8px 10px;min-height:36px;cursor:pointer;border:1px solid ' + (on ? '#111' : '#d4d4d0') + ';background:' + (on ? '#111' : '#fff') + ';color:' + (on ? '#c6f432' : '#6b6b6b') + '">' + k + '</button>'; }).join('') + '</div></div>';
-    var CONN = [['news', 'News headlines', 'reads headlines on its stocks', 'beta'], ['top', 'Top agents', 'weighs what the best public agents just did', 'beta'], ['x', 'X accounts', 'reads public posts from accounts you add', 'beta'], ['chain', 'Onchain flows', 'Robinhood Chain pool activity', 'soon']];
-    b += '<div style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">Signals</span>' + CONN.map(function (c) { var on = !!t.conn[c[0]], soon = c[3] === 'soon'; return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f1f1ee"><div style="display:flex;flex-direction:column;flex:1 1 auto;min-width:0"><span style="font-size:14px;font-weight:600">' + c[1] + ' <span class="chip" style="font-size:10px">' + c[3] + '</span></span><span style="font-size:12px;color:#6b6b6b">' + c[2] + '</span></div><button type="button" ' + (soon ? 'disabled ' : '') + 'data-act="conn" data-c="' + c[0] + '" aria-pressed="' + on + '" class="btn sm" style="min-width:64px;' + (soon ? 'opacity:.45;cursor:not-allowed' : (on ? 'background:#c6f432;border-color:#111' : '')) + '">' + (soon ? 'Soon' : (on ? 'On' : 'Off')) + '</button></div>'; }).join('') + '</div>';
-    b += '<div style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">X accounts it follows</span><div style="display:flex;gap:6px"><input id="xHandle" type="text" maxlength="16" placeholder="@handle" aria-label="X handle to follow" style="flex:1 1 auto;min-width:0;font:500 14px Inter,sans-serif;border:1px solid #d4d4d0;border-radius:10px;padding:10px 12px;min-height:44px;box-sizing:border-box"><button type="button" class="btn sm" data-act="addx">Add</button></div>';
-    if (t.handles.length) b += '<div style="display:flex;flex-wrap:wrap;gap:6px">' + t.handles.map(function (h, i) { return '<span class="chip" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 4px 4px 10px">' + esc(h) + '<button type="button" data-act="rmx" data-i="' + i + '" aria-label="Remove ' + esc(h) + '" style="border:0;background:transparent;cursor:pointer;font-size:14px;min-width:28px;min-height:28px">×</button></span>'; }).join('') + '</div>';
-    b += '<span style="font-size:12px;line-height:1.45;color:#6b6b6b">Up to 3. Posts are signals the agent weighs inside its rules, never orders.</span></div>';
-    b += '<pre id="rulesPreview" class="mono" style="margin:0;background:#000;color:#c6f432;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.6;white-space:pre-wrap">' + esc(rulesText(d, t.limit)) + '</pre>';
-    b += '<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn lime" data-act="simulate" style="flex:1 1 auto">▶ Simulate last week</button><button type="button" class="btn dark" data-act="mint">Mint · 0.001 ETH</button></div>';
-    if (st.mintOpen) b += mintPanel(m);
-    b += '<span style="font-size:12px;line-height:1.45;color:#6b6b6b">The replay uses price rules only. Signals and X accounts switch on in Season 0.</span>';
-    return b;
+  function buildFace() {
+    var f = $('dvFace');
+    if (st.face === 'back') {
+      f.innerHTML = '<div class="dv-rail" id="dvRail" role="group" aria-label="Control panel mode"></div><div class="dv-panel" id="dvPanel"></div>' +
+        '<div class="dv-lcd dv-rules"><span class="dv-rules-h">RULES · LIVE</span><pre id="rulesPreview" aria-live="polite"></pre></div>' +
+        '<div class="dv-slot" id="dvSlot"></div><div class="dv-keys" id="dvKeysB"></div>';
+      $('dvModel').textContent = 'CONTROL PANEL'; $('dvFoot').textContent = 'S/N ZQ-0001 · MADE FOR ROBINHOOD CHAIN';
+    } else {
+      f.innerHTML = '<div class="dv-bezel"><div class="dv-screen"><div class="scr-top" id="scrTop"></div><div id="scrMain" class="scr-main"></div><div id="scrOv"></div></div></div>' +
+        '<div class="dv-read" id="dvRead"></div><div class="dv-keys" id="dvKeys"></div>';
+      $('dvModel').textContent = 'AGENT-01'; $('dvFoot').textContent = 'PAPER TRADING · ROBINHOOD CHAIN';
+    }
+    ['dvRail', 'dvPanel', 'dvSlot', 'dvKeysB', 'scrTop', 'scrMain', 'scrOv', 'dvRead', 'dvKeys'].forEach(function (id) { var e = $(id); if (e) e._h = null; });
   }
-  function renderBack() { var m = model(); var el = $('device'); el.innerHTML = backHTML(m); el._h = null; }
+  function meter(l, v, label, hint, warn) {
+    var n = Math.round(v / 8.34), b = '';
+    for (var i = 0; i < 12; i++) b += '<span style="background:' + (i < n ? (warn ? '#ff7a6b' : '#c6f432') : '#1d2810') + '"></span>';
+    return '<div class="scr-meter" title="' + hint + '"><span class="scr-ml">' + l + '</span><span class="scr-blocks" role="meter" aria-label="' + l + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + v + '">' + b + '</span><span class="scr-mv">' + label + '</span></div>';
+  }
+  function winRate(trades) {
+    var w = 0, n = 0, buy = null;
+    trades.forEach(function (t) { if (t.act === 'BUY') buy = t.price; else if (buy !== null) { n++; if (t.price > buy) w++; buy = null; } });
+    return n ? Math.round(w / n * 100) : null;
+  }
+  function ovBox(head, body, btns) { return '<div class="scr-ov" role="dialog" aria-label="' + head + '"><span class="scr-ov-h">' + head + '</span>' + body + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + btns + '</div></div>'; }
+  function ovBtn(act, t, primary, extra) { return '<button type="button" class="scr-btn' + (primary ? ' on' : '') + '" data-act="' + act + '"' + (extra || '') + '>[ ' + t + ' ]</button>'; }
+  function mintOv(m) {
+    return ovBox('MINT · Ξ0.001', '<span class="scr-ov-t">' + esc(m.name) + ' gets an onchain passport (ERC-8004) on Robinhood Chain, a Season 0 seat and a public track record. Trading stays paper.</span><span class="scr-ov-s">Minting opens with Season 0. This preview charges nothing and asks for no wallet.</span>', ovBtn('join', 'JOIN MINT LIST', true) + ovBtn('closeov', 'CLOSE'));
+  }
+  function frontRender(m) {
+    var bt = st.btick || 0;
+    setHTML('scrTop', '<span>' + (m.hatching ? 'HATCHING…' : (m.born ? 'YOUR AGENT · LV ' + m.lvl : 'DEMO AGENT · REPLAY')) + '</span><span>NVDA · 24/7</span>');
+    var s = '';
+    if (m.hatching) {
+      s += '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;flex:1 1 auto"><img alt="" class="' + (bt < 14 ? 'shake' : 'pop') + '" style="width:140px;height:140px" src="' + robot(m.subject, { preset: m.preset, stage: bt < 14 ? 0 : 1, mood: 'happy' }) + '"><div style="display:flex;flex-direction:column;gap:6px;font-size:13px">';
+      ['reading its personality', 'compiling rules', 'hatching', 'replaying last week'].forEach(function (l, i) {
+        var dn = bt >= (i + 1) * 7, cur = !dn && bt >= i * 7;
+        s += '<span style="color:' + (dn ? '#c6f432' : (cur ? '#d9ff5c' : '#4d5f1c')) + '">' + (dn ? '✓' : (cur ? '›' : '·')) + ' ' + l + '</span>';
+      });
+      s += '</div></div>';
+    } else {
+      var wr = winRate(m.trades), risk = Math.min(100, Math.round(m.sim.dd * 100 / st.tune.limit * 100));
+      var sk = skillNames().length ? SKILLS.filter(function (k) { return st.skills[k[0]]; }).map(function (k) { return SK_SHORT[k[0]]; }).join(' + ') : '';
+      s += '<div style="display:flex;gap:14px;align-items:center"><img alt="' + esc(m.name) + ', your agent" class="' + (m.mood === 'happy' ? 'bob' : '') + '" style="width:104px;height:104px;flex:0 0 auto" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '">';
+      s += '<div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 auto"><span class="doto scr-name">' + esc(m.name) + '</span><span class="scr-sub">LV ' + m.lvl + ' · ' + (m.mood === 'happy' ? 'HAPPY' : (m.mood === 'sad' ? 'GRUMPY' : 'CALM')) + (m.born && !st.answered ? ' · HUNGRY' : '') + ' · ' + sk + '</span>';
+      s += meter('WIN RATE', wr === null ? 0 : wr, wr === null ? '—' : wr + '%', 'Share of closed trades that made money this week');
+      s += meter('RISK USED', risk, risk + '%', 'How much of the daily loss limit it has already used', true);
+      s += meter('ENERGY', m.fedV, m.fedV + '%', 'Drops every day; the daily question refills it. At 0 the agent retires');
+      s += '<span class="scr-legend">ENERGY drops daily · answer the daily question to refill</span></div></div>';
+      s += '<svg aria-hidden="true" viewBox="0 0 300 48" preserveAspectRatio="none" style="width:100%;height:48px;display:block;flex:0 0 auto"><line x1="0" y1="' + (m.baseY * 48 / 56).toFixed(1) + '" x2="300" y2="' + (m.baseY * 48 / 56).toFixed(1) + '" stroke="#2f3d12" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><polyline points="' + spark(m.sim.eq, 300, 48) + '" fill="none" stroke="#c6f432" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>';
+      s += '<p aria-live="polite" class="scr-diary">› “' + esc(m.diary) + '”</p>';
+      if (m.born) s += '<span class="scr-legend">READ FROM YOUR WORDS: ' + esc(m.parsed.cues.join(', ').toUpperCase()) + '</span>';
+    }
+    setHTML('scrMain', s);
+    var ov = '';
+    if (st.mintOpen) ov = mintOv(m);
+    else if (st.shareOpen && m.born) {
+      var tweet = 'I just hatched ' + m.name + ' on ZeroIQ. 7-day paper replay: ' + fmt(m.sim.ret) + '. Can yours do better? zeroiq.ai';
+      ov = ovBox('SHARE CARD', '<div class="scr-card"><img alt="" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '"><span style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:10px;letter-spacing:.1em;color:#c6f432">JUST HATCHED</span><span class="doto" style="font-size:18px;line-height:1.05;color:#fff">' + esc(m.name) + '</span><span style="font-size:11px;color:#a3a3a0">7-day paper replay: <span style="color:' + (m.sim.ret >= 0 ? '#c6f432' : '#ff7a6b') + '">' + fmt(m.sim.ret) + '</span></span></span></div>',
+        '<a class="scr-btn on" target="_blank" rel="noopener" href="https://x.com/intent/tweet?text=' + encodeURIComponent(tweet) + '">[ OPEN X ]</a>' + ovBtn('closeov', 'CLOSE'));
+    } else if (st.saveOpen) ov = ovBox('ON THE LIST', '<span class="scr-ov-t">We will ping you when Season 0 and minting open.</span>', ovBtn('closeov', 'OK', true));
+    else if (m.born && m.done && !st.dismissed) ov = ovBox('! EVOLVE PROPOSAL', '<span class="scr-ov-t">' + esc(m.prop.text) + '</span>', ovBtn('evolve', 'YES', true) + ovBtn('notnow', 'NOT NOW'));
+    setHTML('scrOv', ov);
+    var ro = function (v, l, c) { return '<div class="dv-kc"><div class="dv-lcd dv-ro"><span class="doto" style="color:' + c + '">' + v + '</span></div><span class="dv-eng">' + l + '</span></div>'; };
+    setHTML('dvRead', ro(fmt(m.sim.ret), '7D RETURN', m.sim.ret >= 0 ? '#c6f432' : '#ff7a6b') + ro(('0' + m.trades.length).slice(-2), 'TRADES', '#d9ff5c') + ro((m.sim.dd * 100).toFixed(1) + '%', 'MAX DD', '#d9ff5c'));
+    setHTML('dvKeys', kc('<button type="button" class="dv-key dv-round" data-act="flip" aria-label="Tune: flip the device to the control panel">' + TUNE_ICON + '</button>', 'TUNE') +
+      kc('<button type="button" class="dv-key dv-round" data-act="replay" aria-label="Replay last week">▶</button>', 'REPLAY') +
+      kc('<button type="button" class="dv-key dv-round" data-act="share" aria-label="Share on X"' + (m.born ? '' : ' aria-disabled="true" title="Hatch an agent first"') + '>⇪</button>', 'SHARE') +
+      kc('<button type="button" class="dv-key lime dv-mint" data-act="mint" aria-expanded="' + !!st.mintOpen + '">MINT · Ξ0.001</button>', 'ENTER THE LEAGUE'));
+  }
+  function fader(key, label, val, min, max, color, attr) {
+    var top = Math.round((1 - (val - min) / (max - min)) * 112);
+    return '<div class="dv-fader"><span class="mono" id="tv-' + key + '" style="font-size:11px;font-weight:700;color:' + color + '">' + (key === 'limit' ? '−' + val + '%' : val) + '</span><div class="dv-ftrack"><span class="dv-frail"></span>' +
+      [0, 1, 2, 3, 4, 5].map(function (i) { return '<span class="dv-tick" style="top:' + (6 + i * 22) + 'px"></span>'; }).join('') +
+      '<span class="dv-cap" id="cap-' + key + '" style="top:' + top + 'px;border-top-color:' + color + '"></span><input type="range" min="' + min + '" max="' + max + '" value="' + val + '" ' + attr + '="' + key + '" aria-label="' + label + '"></div><span class="dv-eng">' + label + '</span></div>';
+  }
+  function panelHTML(m) {
+    var d = m.dna, t = st.tune, mode = st.mode || 'EQ', p = '';
+    if (st.mintOpen) return mintOv(m);
+    if (mode === 'EQ') {
+      p += '<div style="display:flex;justify-content:space-between;align-items:center"><span class="dv-eng">EQUALIZER</span><span class="mono" id="tv-preset" style="font-size:10px;font-weight:700;color:#c6f432">PRESET: ' + (st.preset || 'CUSTOM') + '</span></div>';
+      p += '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 4px">' + fader('patience', 'PAT', d.patience, 0, 99, '#c6f432', 'data-dna') + fader('fomo', 'FOMO', d.fomo, 0, 99, '#c6f432', 'data-dna') + fader('risk', 'RISK', d.risk, 0, 99, '#c6f432', 'data-dna') + fader('freq', 'ACT', d.freq, 0, 99, '#c6f432', 'data-dna') + fader('limit', 'LOSS', t.limit, 3, 20, '#ff7a6b', 'data-tune') + '</div>';
+      var momo = d.style === 'momentum';
+      p += '<div style="display:flex;align-items:center;gap:14px"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;flex:1 1 auto">' + ['ZEN', 'DIP', 'MOMO', 'DEGEN'].map(function (z) { return '<button type="button" class="dv-key dv-sm' + (st.preset === z ? ' on' : '') + '" data-act="preset" data-p="' + z + '" aria-pressed="' + (st.preset === z) + '">' + z + '</button>'; }).join('') + '</div>';
+      p += '<div class="dv-kc"><button type="button" class="dv-knob" data-act="knob" style="transform:rotate(' + (momo ? 80 : -80) + 'deg)" aria-label="Style: ' + (momo ? 'momentum' : 'dip buyer') + '. Press to switch"><span></span></button><span class="dv-eng">DIP ◂ ▸ MOMO</span></div></div>';
+    } else if (mode === 'MARKETS') {
+      p += '<span class="dv-eng">WATCHLIST</span><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">' + Object.keys(t.watch).map(function (k) { var on = t.watch[k]; return '<div class="dv-kc" style="gap:4px"><span class="dv-ledk' + (on ? ' on' : '') + '"></span><button type="button" class="dv-key dv-sm dv-full' + (on ? ' on' : '') + '" data-act="watch" data-t="' + k + '" aria-pressed="' + on + '">' + k + '</button></div>'; }).join('') + '</div>';
+      p += '<span class="dv-eng">ONCHAIN SKILLS</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' + SKILLS.map(function (k) { var on = !!st.skills[k[0]]; return '<button type="button" class="dv-key dv-sm' + (on ? ' on' : '') + '" data-act="skill" data-k="' + k[0] + '" aria-pressed="' + on + '" title="' + k[2] + '"><span class="dv-ledk' + (on ? ' on' : '') + '"></span>' + SK_SHORT[k[0]] + '</button>'; }).join('') + '</div>';
+      p += '<span class="dv-note">The replay simulates spot trades. Other skills switch on in Season 0.</span>';
+    } else {
+      p += CONN.map(function (c) { var on = !!t.conn[c[0]], soon = c[3] === 'soon'; return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="display:flex;flex-direction:column;min-width:0"><span style="font:700 12px Inter,sans-serif;color:#e6e7ea">' + c[1] + '</span><span class="mono" style="font-size:10px;color:#8a8d96">' + c[2] + '</span></span><button type="button" role="switch" aria-checked="' + on + '" aria-label="' + c[1] + '" class="dv-tog' + (on ? ' on' : '') + '" data-act="conn" data-c="' + c[0] + '"' + (soon ? ' disabled' : '') + '><span></span></button></div>'; }).join('');
+      p += '<span class="dv-eng">X ACCOUNTS · UP TO 3</span><div class="dv-lcd dv-xin">' + t.handles.map(function (h, i) { return '<span class="dv-xh">' + esc(h) + '<button type="button" data-act="rmx" data-i="' + i + '" aria-label="Remove ' + esc(h) + '">×</button></span>'; }).join('') + (t.handles.length < 3 ? '<input id="xHandle" type="text" maxlength="16" placeholder="@handle▍" aria-label="X handle to follow"><button type="button" class="scr-btn on" data-act="addx">[ ADD ]</button>' : '') + '</div>';
+      p += '<span class="dv-note">Posts are signals it weighs inside its rules, never orders. Signals switch on in Season 0.</span>';
+    }
+    return p;
+  }
+  function renderBack() {
+    if (!$('dvPanel')) return;
+    var m = model(), mode = st.mode || 'EQ', ae = document.activeElement, fk = null;
+    if (ae && ae.closest && ae.closest('#device') && ae.getAttribute('data-act')) fk = '[data-act="' + ae.getAttribute('data-act') + '"]' + ['data-p', 'data-t', 'data-k', 'data-c', 'data-m'].map(function (a) { var v = ae.getAttribute(a); return v ? '[' + a + '="' + v + '"]' : ''; }).join('');
+    setHTML('dvRail', ['EQ', 'MARKETS', 'SIGNALS'].map(function (x) { return '<button type="button" class="dv-key dv-mode' + (x === mode ? ' on' : '') + '" data-act="mode" data-m="' + x + '" aria-pressed="' + (x === mode) + '">' + x + '</button>'; }).join(''));
+    var pe = $('dvPanel'); pe._h = null; setHTML('dvPanel', panelHTML(m));
+    $('rulesPreview').textContent = rulesText(m.dna, st.tune.limit);
+    var md = st.md;
+    setHTML('dvSlot', '<span class="dv-mouth" aria-hidden="true"></span><span style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto"><span class="mono" style="font-size:10px;font-weight:800;letter-spacing:.1em;color:' + (md ? '#c6f432' : '#e6e7ea') + '">' + (md ? 'LOADED · ' + esc(md.name.toUpperCase()).slice(0, 26) : 'STRATEGY FILE · .MD') + '</span><span class="mono" style="font-size:10px;color:#8a8d96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (md ? (md.size / 1024).toFixed(1) + ' KB · ' + md.lines + ' lines' + (md.title ? ' · ' + esc(md.title) : '') : 'your playbook in markdown · read in Season 0') + '</span></span>' +
+      (md ? '<button type="button" class="dv-key dv-slotbtn" data-act="eject" aria-label="Remove strategy file">EJECT</button>' : '<button type="button" class="dv-key dv-slotbtn" data-act="load" aria-label="Load a strategy .md file">LOAD</button>'));
+    setHTML('dvKeysB', kc('<button type="button" class="dv-key dv-round" data-act="flip" aria-label="Flip back to the screen">↺</button>', 'FRONT') +
+      kc('<button type="button" class="dv-key dv-sim" data-act="simulate">▶ SIMULATE</button>', 'LAST WEEK') +
+      kc('<button type="button" class="dv-key lime dv-mint dv-mint-b" data-act="mint" aria-expanded="' + !!st.mintOpen + '">MINT · Ξ0.001</button>', 'ENTER THE LEAGUE'));
+    if (fk) { var n = document.querySelector('#device ' + fk); if (n) n.focus(); }
+  }
+  function refresh() { if (st.face === 'back') renderBack(); else render(); }
   function flip(to) {
     var el = $('device');
-    var swap = function () { st.face = to; if (to === 'back') renderBack(); else { el.innerHTML = ''; render(); } };
+    var swap = function () { st.face = to; buildFace(); if (to === 'back') renderBack(); else render(); };
     if (reduce) { swap(); return; }
     el.style.transition = 'transform .16s ease-in';
     el.style.transform = 'perspective(1400px) rotateY(90deg)';
@@ -296,48 +396,9 @@
     setHTML('heroDyn', hd);
 
     // device
-    var bt = st.btick || 0, d = '';
-    var dh = '<div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">' + (m.hatching ? 'Hatching' : (m.born ? 'Your agent' : 'Demo agent')) + '</span><span style="display:flex;gap:6px;align-items:center"><span class="chip">Paper</span><button type="button" class="btn sm" data-act="flip" aria-label="Flip the card to tune the agent" style="min-height:32px;padding:4px 10px;font-size:13px">↻ Tune</button></span></div>';
-    d += '<div style="background:#0f0f0f;border-radius:14px;padding:20px;color:#f2f2f2;display:flex;flex-direction:column;gap:14px;min-height:330px">';
-    if (m.hatching) {
-      d += '<div style="display:flex;align-items:center;justify-content:center;gap:28px;flex:1 1 auto;flex-wrap:wrap"><img alt="" class="' + (bt < 14 ? 'shake' : 'pop') + '" style="width:160px;height:160px" src="' + robot(m.subject, { preset: m.preset, stage: bt < 14 ? 0 : 1, mood: 'happy' }) + '"><div class="mono" style="display:flex;flex-direction:column;gap:8px;font-size:13px">';
-      ['reading its personality', 'compiling rules', 'hatching', 'replaying last week'].forEach(function (l, i) {
-        var dn = bt >= (i + 1) * 7, cur = !dn && bt >= i * 7;
-        d += '<span style="color:' + (dn ? '#c6f432' : (cur ? '#fff' : '#6b6b6b')) + '">' + (dn ? '✓' : (cur ? '›' : '·')) + ' ' + l + '</span>';
-      });
-      d += '</div></div>';
-    } else {
-      d += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><img alt="' + esc(m.name) + ', your agent" class="' + (m.mood === 'happy' ? 'bob' : '') + '" style="width:152px;height:152px" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '">';
-      d += '<span class="doto" style="font-size:26px;color:#fff;line-height:1.05;text-align:center">' + esc(m.name) + '</span>';
-      d += '<span class="mono" style="font-size:12px;color:#a3a3a0">Level ' + m.lvl + ' · ' + (m.mood === 'happy' ? 'happy' : (m.mood === 'sad' ? 'grumpy' : 'calm')) + (m.born && !st.answered ? ' · hungry' : '') + '</span><span style="display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:4px">' + skillNames().map(function (n) { return '<span class="mono" style="font-size:10px;letter-spacing:.04em;padding:2px 6px;border-radius:4px;background:#1f1f1f;color:#c6f432">' + n.toUpperCase() + '</span>'; }).join('') + '</span></div>';
-      d += '<div style="display:flex;flex-direction:column;gap:7px">' + bar('MOOD', m.moodV, m.moodV > 50 ? '#c6f432' : '#ff7a6b') + bar('HEALTH', m.healthV, m.healthV > 50 ? '#c6f432' : '#ff7a6b') + bar('FED', m.fedV, m.fedV > 50 ? '#c6f432' : '#ff7a6b') + '</div>';
-      d += '<svg aria-hidden="true" viewBox="0 0 300 56" preserveAspectRatio="none" style="width:100%;height:56px;display:block"><line x1="0" y1="' + m.baseY + '" x2="300" y2="' + m.baseY + '" stroke="#3a3a3a" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><polyline points="' + spark(m.sim.eq, 300, 56) + '" fill="none" stroke="#c6f432" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>';
-      d += '<p aria-live="polite" style="margin:0;font-size:15px;line-height:1.4;color:#e5e5e2">“' + esc(m.diary) + '”</p>';
-    }
-    d += '</div>';
-    var kpi = function (l, v, col) { return '<div style="border:1px solid #e5e5e2;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px"><span class="mono" style="font-size:11px;color:#6b6b6b">' + l + '</span><span class="mono" style="font-weight:700;font-size:16px;color:' + (col || '#111') + '">' + v + '</span></div>'; };
-    d += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' + kpi('7-DAY RETURN', fmt(m.sim.ret), m.sim.ret >= 0 ? UP : DOWN) + kpi('TRADES', m.trades.length) + kpi('MAX DRAWDOWN', (m.sim.dd * 100).toFixed(1) + '%') + '</div>';
-    var dm = d; d = '';
-    if (!m.born && !m.hatching) d += '<button type="button" class="btn" data-act="flip" style="width:100%">↻ Flip &amp; tune this agent</button>';
-    if (m.born) {
-      d += '<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn lime" data-act="share" style="flex:1 1 auto">Post its birth on X</button><button type="button" class="btn dark" data-act="mint">Mint · 0.001 ETH</button><button type="button" class="btn" data-act="replay">Replay</button></div>';
-      if (st.shareOpen) {
-        var tweet = 'I just hatched ' + m.name + ' on ZeroIQ. 7-day paper replay: ' + fmt(m.sim.ret) + '. Can yours do better? zeroiq.ai';
-        d += '<div style="display:flex;flex-direction:column;gap:10px"><div style="background:#0f0f0f;border-radius:12px;aspect-ratio:1200/630;display:flex;align-items:center;gap:16px;padding:18px;color:#f2f2f2"><img alt="" style="width:34%;height:auto" src="' + robot(m.subject, { preset: m.preset, stage: m.stage, mood: m.mood }) + '"><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span class="mono" style="font-size:11px;color:#c6f432;letter-spacing:.06em">JUST HATCHED</span><span class="doto" style="font-size:22px;line-height:1.05;color:#fff">' + esc(m.name) + '</span><span class="mono" style="font-size:12px;color:#a3a3a0">7-day paper replay: <span style="color:' + (m.sim.ret >= 0 ? '#c6f432' : '#ff7a6b') + '">' + fmt(m.sim.ret) + '</span></span><span class="mono" style="font-size:12px;color:#a3a3a0">can yours do better? · zeroiq.ai</span></div></div>';
-        d += '<a class="btn dark" target="_blank" rel="noopener" href="https://x.com/intent/tweet?text=' + encodeURIComponent(tweet) + '">Open X with this card</a></div>';
-      }
-      if (st.mintOpen) d += mintPanel(m);
-      if (st.saveOpen) d += '<div style="border:1px solid #e5e5e2;border-radius:12px;padding:12px;background:#f7f7f5;font-size:14px;line-height:1.45">You are on the list. We will ping you when Season 0 and minting open.</div>';
-      if (m.done && !st.dismissed) {
-        d += '<div style="border:1px solid #cfe8d6;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#f3faf5"><span class="eyebrow" style="color:#0a7f3f">Evolve proposal</span><span style="font-size:14px;line-height:1.45">' + esc(m.prop.text) + '</span><div style="display:flex;gap:8px"><button type="button" class="btn dark sm" data-act="evolve">Evolve</button><button type="button" class="btn sm" data-act="notnow">Not now</button></div></div>';
-      }
-    }
-    d += '<span style="font-size:12px;line-height:1.45;color:#6b6b6b">' + (m.born ? 'Read from your words: ' + esc(m.parsed.cues.join(', ')) + '. ' : '') + 'Demo runs on sample price data and replays spot trades only. Other skills switch on in Season 0 with real Robinhood Chain prices.</span>';
-    if (st.face !== 'back') {
-      var dv = $('device');
-      if (!$('devHead')) { dv.innerHTML = '<div id="devHead"></div><div id="devMain" style="display:flex;flex-direction:column;gap:12px"></div><div id="devActs" style="display:flex;flex-direction:column;gap:12px"></div>'; dv._h = null; }
-      setHTML('devHead', dh); setHTML('devMain', dm); setHTML('devActs', d);
-    }
+    if (!$('dvFace')) buildShell();
+    if (st.face !== 'back') frontRender(m);
+    setHTML('devNote', (m.born ? 'Read from your words: ' + esc(m.parsed.cues.join(', ')) + '. ' : '') + 'Demo runs on sample price data and replays spot trades only. Other skills switch on in Season 0 with real Robinhood Chain prices.');
 
     // dying + duel
     var dying = SAMPLES.slice().sort(function (a, b) { return a.score - b.score; }).slice(0, 3), WHY = ['owner missed 2 questions', 'drawdown near the limit', 'chased 4 tops this week'];
@@ -419,20 +480,25 @@
     else if (a === 'twin') { $('prompt').value = '@degen_intern'; $('prompt').focus(); render(); }
     else if (a === 'ask') set({ askOpen: true });
     else if (a === 'tg') set({ tg: true });
-    else if (a === 'join' || a === 'save') { if (a === 'save' && !m.born) return; e.preventDefault(); set({ joined: true, saveOpen: true }); }
+    else if (a === 'join' || a === 'save') { if (a === 'save' && !m.born) return; e.preventDefault(); st.mintOpen = false; st.shareOpen = false; st.joined = true; st.saveOpen = st.face !== 'back'; refresh(); if (st.face === 'back') render(); }
     else if (a === 'hold') set({ answered: 'hold', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { patience: Math.min(99, m.dna.patience + 5) }) });
     else if (a === 'sell') set({ answered: 'sell', askOpen: false, xp: m.xp + 5, dnaPatch: Object.assign({}, st.dnaPatch || {}, { risk: Math.max(0, m.dna.risk - 10) }) });
-    else if (a === 'share') set({ shareOpen: !st.shareOpen });
-    else if (a === 'replay') set({ rtick: st.tick });
+    else if (a === 'share') { if (!m.born) return; set({ shareOpen: !st.shareOpen, mintOpen: false, saveOpen: false }); }
+    else if (a === 'closeov') { st.mintOpen = false; st.shareOpen = false; st.saveOpen = false; refresh(); }
+    else if (a === 'mode') { st.mode = b.getAttribute('data-m'); st.mintOpen = false; renderBack(); }
+    else if (a === 'knob') { st.preset = null; st.dnaPatch = Object.assign({}, st.dnaPatch || {}, { style: m.dna.style === 'momentum' ? 'dip' : 'momentum' }); renderBack(); }
+    else if (a === 'load') { var fi = $('mdFile'); if (fi) fi.click(); }
+    else if (a === 'eject') { st.md = null; $('mdFile').value = ''; renderBack(); }
+    else if (a === 'replay') set({ rtick: st.tick, mintOpen: false, shareOpen: false, saveOpen: false });
     else if (a === 'evolve') set({ dnaPatch: Object.assign({}, st.dnaPatch || {}, m.prop.patch), xp: m.xp + 15, dismissed: true, rtick: st.tick });
     else if (a === 'notnow') set({ dismissed: true });
     else if (a === 'bet') { var n = b.getAttribute('data-n'); set({ bet: st.bet === n ? null : n }); }
     else if (a === 'duel') set({ duel: b.getAttribute('data-n') });
     else if (a === 'duelcancel') set({ duel: null });
     else if (a === 'fork') startHatch(b.getAttribute('data-seed'));
-    else if (a === 'skill') { var sk = b.getAttribute('data-k'), cnt = Object.keys(st.skills).filter(function (x) { return st.skills[x]; }).length; if (st.skills[sk] && cnt === 1) return; st.skills[sk] = !st.skills[sk]; if (st.face === 'back') { var rp2 = $('rulesPreview'); if (rp2) rp2.textContent = rulesText(model().dna, st.tune.limit); } render(); }
+    else if (a === 'skill') { var sk = b.getAttribute('data-k'), cnt = Object.keys(st.skills).filter(function (x) { return st.skills[x]; }).length; if (st.skills[sk] && cnt === 1) return; st.skills[sk] = !st.skills[sk]; render(); if (st.face === 'back') renderBack(); }
     else if (a === 'flip') flip(st.face === 'back' ? 'front' : 'back');
-    else if (a === 'mint') { st.mintOpen = !st.mintOpen; if (st.face === 'back') renderBack(); else render(); }
+    else if (a === 'mint') { st.mintOpen = !st.mintOpen; st.shareOpen = false; st.saveOpen = false; refresh(); }
     else if (a === 'preset') { var pz = b.getAttribute('data-p'); st.preset = pz; st.dnaPatch = Object.assign({}, st.dnaPatch || {}, TUNE_PRESETS[pz]); renderBack(); }
     else if (a === 'watch') { var tk = b.getAttribute('data-t'); st.tune.watch[tk] = !st.tune.watch[tk]; renderBack(); }
     else if (a === 'conn') { var cn = b.getAttribute('data-c'); st.tune.conn[cn] = !st.tune.conn[cn]; renderBack(); }
@@ -440,7 +506,7 @@
     else if (a === 'rmx') { st.tune.handles.splice(+b.getAttribute('data-i'), 1); renderBack(); }
     else if (a === 'simulate') {
       if (st.phase !== 'born') { st.subject = prompt() || currentExample(); st.phase = 'born'; st.xp = 0; }
-      st.rtick = st.tick; st.dismissed = false; st.mintOpen = false;
+      st.rtick = st.tick; st.dismissed = false; st.mintOpen = false; st.shareOpen = false; st.saveOpen = false;
       flip('front');
     }
 
@@ -458,13 +524,23 @@
     var k = t.getAttribute('data-dna'), u = t.getAttribute('data-tune'), v = parseInt(t.value, 10) || 0;
     if (!k && !u) return;
     st.preset = null;
+    var mn = +t.min || 0, mx = +t.max || 99, cap = $('cap-' + (k || u)); if (cap) cap.style.top = Math.round((1 - (v - mn) / (mx - mn)) * 112) + 'px';
     if (k) { var p = {}; p[k] = v; st.dnaPatch = Object.assign({}, st.dnaPatch || {}, p); var lab = $('tv-' + k); if (lab) lab.textContent = v; }
     if (u === 'limit') { st.tune.limit = v; var tl = $('tv-limit'); if (tl) tl.textContent = '−' + v + '%'; }
     if (u === 'style') st.dnaPatch = Object.assign({}, st.dnaPatch || {}, { style: v > 50 ? 'momentum' : 'dip' });
     var pr = $('tv-preset'); if (pr) pr.textContent = 'PRESET: CUSTOM';
+    document.querySelectorAll('#device [data-act=preset].on').forEach(function (x) { x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); });
     var rp = $('rulesPreview'); if (rp) rp.textContent = rulesText(model().dna, st.tune.limit);
   });
 
+  document.addEventListener('change', function (e) {
+    var t = e.target; if (!t || t.id !== 'mdFile' || !t.files || !t.files[0]) return;
+    var f = t.files[0];
+    if (f.size > 256 * 1024) { st.md = { name: f.name, size: f.size, lines: 0, title: 'too big, keep it under 256 KB' }; renderBack(); return; }
+    var r = new FileReader();
+    r.onload = function () { var txt = String(r.result || ''), h = (txt.match(/^#\s+(.+)$/m) || [])[1]; st.md = { name: f.name, size: f.size, lines: txt.split('\n').length, title: h ? h.slice(0, 40) : '', text: txt }; renderBack(); };
+    r.readAsText(f);
+  });
   $('prompt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); startHatch(prompt() || currentExample()); } });
 
   renderStatic();
